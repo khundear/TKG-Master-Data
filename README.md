@@ -22,10 +22,13 @@ Data/                     source Excel files — NOT in git (business data)
 CI/                       TKG logo
 prototype/                approved clickable prototype (static HTML, real data)
 tools/export_data.py      Excel → JSON exporter (Python 3 stdlib only)
-apps/web/                 Next.js app — the one deployable (not scaffolded yet)
-packages/db/              Prisma schema, migrations, seeds (not scaffolded yet)
-modules/materials/        Materials module: SPEC.md now, code later
-modules/sku-selling/      SKU (Selling) module: SPEC.md now, code later
+tools/check-i18n.mjs      lists _t('…') strings with no English
+apps/web/                 Next.js app — the one deployable: launcher at /, shared-UI reference at /ui-kit
+packages/db/              @tkg/db   Prisma schema, migrations, importer, seed, data tests, shared filters
+packages/ui/              @tkg/ui   shell pieces from the prototype (top bar, sidebar, cards, table, drawer…)
+packages/i18n/            @tkg/i18n _t(): Thai string is the key, English in catalogs
+modules/materials/        Materials module (filled by the Materials session)
+modules/sku-selling/      SKU (Selling) module (filled by the SKU session)
 ```
 
 ## Stack (mirrors ICW-OS-APP as documented in ICW-OS-DESIGN/PLATFORM.md)
@@ -42,9 +45,53 @@ cd prototype && python3 -I -m http.server 8791 --bind 127.0.0.1
 
 Then open http://127.0.0.1:8791/. Published copy: https://claude.ai/artifact/SgXKTrRmF5K99cyPfojGw3
 
-## Prerequisites for the real app
+## Run the app
 
-- Node.js 20 LTS or newer, and pnpm (`corepack enable`)
-- PostgreSQL 16 (local install or Docker)
+Prerequisites: Node.js 20+ (this machine: `~/.local/node/bin`, add it to `PATH`), pnpm via `corepack enable`
+(the repo pins pnpm 10), PostgreSQL 16 (this machine: Postgres.app on `localhost:5432`, database `tkg_master_data`).
 
-Neither is installed on the original machine yet (11 Nov 2026).
+```bash
+export PATH="$HOME/.local/node/bin:$PATH"
+```
+
+```bash
+cp .env.example .env
+```
+
+Check `DATABASE_URL` and `TKG_DATA_DIR` (the folder with the two `.xlsx` files) in `.env`, then:
+
+```bash
+pnpm install
+```
+
+```bash
+pnpm db:migrate
+```
+
+```bash
+pnpm db:import
+```
+
+```bash
+pnpm test
+```
+
+```bash
+pnpm dev
+```
+
+Open http://localhost:3000/ (launcher) and http://localhost:3000/ui-kit (every shared UI piece on real data).
+
+| Command | What it does |
+|---|---|
+| `pnpm db:migrate` | Applies migrations to the database in `.env` (and creates a new one if the schema changed). |
+| `pnpm db:seed` | Adds the reference data that is not in the sheets (the 4 brands). Safe to repeat. |
+| `pnpm db:import` | Seeds, then loads both workbooks as **draft** data, replacing the previous draft. Refuses if anything is no longer draft. About 3 s. |
+| `pnpm test` | Unit tests plus data tests against the imported database (counts must match the prototype). |
+| `pnpm check:i18n` | Fails when a Thai `_t('…')` string has no English. |
+| `pnpm db:reset` | Drops and recreates the database schema (local only), then run `pnpm db:import`. |
+| `pnpm typecheck` | TypeScript across all packages. |
+
+Everything imported is **draft**. Brand flag 0 in the sheet means *not specified* and creates no brand-usage row.
+Every record keeps its import batch, sheet and row; every source row is kept as raw JSON in `import_rows`.
+Data rules: [CLAUDE.md](CLAUDE.md). Schema choices: [docs/DECISIONS.md](docs/DECISIONS.md) D-006 onward.

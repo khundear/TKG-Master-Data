@@ -1,0 +1,16 @@
+{
+  "เปิดเมนู": "Open menu",
+  "กลับหน้าหลัก": "Back to home",
+  "ต้นเครื่อง group": "Tonkrueng group",
+  "การแจ้งเตือน": "Notifications",
+  "แอปทั้งหมด": "All apps",
+  "{n} แอป": { "one": "{n} app", "other": "{n} apps" },
+  "{n} รายการ": { "one": "{n} item", "other": "{n} items" },
+  "ยังไม่ระบุ": "Not specified",
+  "ไม่พบรายการ": "No items found",
+  "ลองเปลี่ยนคำค้นหรือล้างตัวกรอง": "Try another search or clear the filters",
+  "แสดง {a}–{b} จาก {total} รายการ": "Showing {a}–{b} of {total}",
+  "ก่อนหน้า": "Previous",
+  "ถัดไป": "Next",
+  "ปิด": "Close"
+}
