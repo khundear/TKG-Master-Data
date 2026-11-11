@@ -1,0 +1,353 @@
+// TKG Master Data — the one Prisma schema (D-002). Only what Materials and SKU (Selling) need today.
+// Trimmed from the Database Structure v1.1 appendix in IMPLEMENTATION-CONTEXT.md; see docs/DECISIONS.md D-006…D-011.
+//
+// House rules carried into the schema:
+// - Everything imported from the sheets is `draft`. Nothing becomes `approved` without an approval workflow (not built yet).
+// - Every imported row keeps provenance: import batch (source file + hash), sheet name and row number.
+// - Material brand flags: only flag = 1 creates a MaterialBrandUsage row (usage = used). Flag 0 means "not specified"
+//   and creates no row. `not_used` exists for a future confirmed decision, never from an import.
+// - Pork is a filter on materials (packages/db/src/filters.ts), not a table.
+// - POS codes live in PosMapping and point at the TKG SKU; they never replace its key.
+// - SKU data is not final: SKU fields are stored as the sheet has them, without cleansing.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Lifecycle of a master record. Imported data is always `draft`.
+enum RecordStatus {
+  draft
+  approved
+  retired
+
+  @@map("record_status")
+}
+
+/// A confirmed brand decision for one material. No row = not specified.
+enum BrandUsage {
+  used
+  not_used
+
+  @@map("brand_usage")
+}
+
+enum ImportStatus {
+  running
+  completed
+  failed
+
+  @@map("import_status")
+}
+
+// ---------------------------------------------------------------- provenance
+
+/// One import of one source workbook.
+model ImportBatch {
+  id             String       @id @default(uuid()) @db.Uuid
+  sourceFile     String       @map("source_file")
+  sourceHash     String       @map("source_hash") /// sha256 of the workbook
+  mappingVersion String       @map("mapping_version")
+  status         ImportStatus @default(running)
+  summary        Json?
+  startedAt      DateTime     @default(now()) @map("started_at") @db.Timestamptz(6)
+  finishedAt     DateTime?    @map("finished_at") @db.Timestamptz(6)
+
+  rows                ImportRow[]
+  materials           Material[]
+  materialCategories  MaterialCategory[]
+  materialBrandUsages MaterialBrandUsage[]
+  units               Unit[]
+  sellingSkus         SellingSku[]
+  skuCategories       SkuCategory[]
+  brandMenuCategories BrandMenuCategory[]
+  posMappings         PosMapping[]
+  stores              Store[]
+
+  @@map("import_batches")
+}
+
+/// Every source row as read, keyed by column letter, so any value can be traced back to the sheet.
+model ImportRow {
+  id      String      @id @default(uuid()) @db.Uuid
+  batchId String      @map("batch_id") @db.Uuid
+  batch   ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  sheet   String
+  rowNo   Int         @map("row_no")
+  raw     Json
+
+  @@unique([batchId, sheet, rowNo])
+  @@map("import_rows")
+}
+
+// ---------------------------------------------------------------- organisation
+
+model Brand {
+  id     String       @id @default(uuid()) @db.Uuid
+  code   String       @unique /// TK, HK, NT, OK
+  nameTh String       @map("name_th")
+  nameEn String?      @map("name_en")
+  status RecordStatus @default(draft)
+
+  stores              Store[]
+  materialBrandUsages MaterialBrandUsage[]
+  sellingSkus         SellingSku[]
+  brandMenuCategories BrandMenuCategory[]
+
+  @@map("brands")
+}
+
+/// A store / branch, as named in the POS snapshot. No store codes exist yet.
+model Store {
+  id      String       @id @default(uuid()) @db.Uuid
+  brandId String       @map("brand_id") @db.Uuid
+  brand   Brand        @relation(fields: [brandId], references: [id])
+  name    String
+  code    String?
+  status  RecordStatus @default(draft)
+
+  importBatchId String?      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  posMappings PosMapping[]
+
+  @@unique([brandId, name])
+  @@map("stores")
+}
+
+// ---------------------------------------------------------------- materials
+
+/// Material Master Bible: the category tree (level 1 primary · 2 secondary · 3 tertiary).
+model MaterialCategory {
+  id                String             @id @default(uuid()) @db.Uuid
+  code              String             @unique /// Material Category ID, e.g. RM_PROTN_PORK
+  level             Int
+  group             String /// RM / SP
+  primaryCode       String?            @map("primary_code")
+  secondaryCode     String?            @map("secondary_code")
+  tertiaryCode      String?            @map("tertiary_code")
+  nameTh            String?            @map("name_th")
+  parentId          String?            @map("parent_id") @db.Uuid
+  parent            MaterialCategory?  @relation("MaterialCategoryTree", fields: [parentId], references: [id])
+  children          MaterialCategory[] @relation("MaterialCategoryTree")
+  sortOrder         Int                @map("sort_order")
+  /// Counts written in the sheet. For reference only, never shown as approved.
+  sheetClassified   Int?               @map("sheet_classified")
+  sheetPending      Int?               @map("sheet_pending")
+  status            RecordStatus       @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet")
+  sourceRow     Int         @map("source_row")
+
+  materials Material[]
+
+  @@index([parentId])
+  @@map("material_categories")
+}
+
+/// Units as written on materials ("EA - ชิ้น" → code EA, name ชิ้น). No conversions exist in the sheet yet.
+model Unit {
+  id     String       @id @default(uuid()) @db.Uuid
+  code   String       @unique
+  nameTh String?      @map("name_th")
+  label  String /// exactly as in the sheet
+  status RecordStatus @default(draft)
+
+  importBatchId String?      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  materials Material[]
+
+  @@map("units")
+}
+
+model Material {
+  id                     String            @id @default(uuid()) @db.Uuid
+  code                   String            @unique /// Material ID ปัจจุบัน
+  legacyCode             String            @unique @map("legacy_code") /// Legacy Material ID, kept for traceability
+  idChange               String?           @map("id_change") /// Crosswalk "การเปลี่ยนแปลง"
+  name                   String
+  description            String?
+  kind                   String? /// "Material", … (All Brands sheet)
+  group                  String? /// RM / SP / SM
+  primaryCategory        String?           @map("primary_category")
+  secondaryCategory      String?           @map("secondary_category")
+  tertiaryCategory       String?           @map("tertiary_category")
+  proposedCategoryCode   String?           @map("proposed_category_code") /// Excel Category Code (เสนอ)
+  proposedCategoryNameTh String?           @map("proposed_category_name_th")
+  currentCategoryName    String?           @map("current_category_name")
+  currentCategoryCode    String?           @map("current_category_code")
+  bibleCode              String?           @map("bible_code")
+  categoryId             String?           @map("category_id") @db.Uuid
+  category               MaterialCategory? @relation(fields: [categoryId], references: [id])
+  /// Sheet "สถานะ": ตรงกัน · ย้ายหมวด · ต้องตัดสินใจ · คงไว้เป็น SM · ยกเลิก
+  mappingStatus          String            @map("mapping_status")
+  isCancelled            Boolean           @default(false) @map("is_cancelled")
+  mappingNote            String?           @map("mapping_note")
+  crosswalkFlag          String?           @map("crosswalk_flag") /// จับคู่ได้ · ต้องตรวจสอบ · …
+  crosswalkEvidence      String?           @map("crosswalk_evidence")
+  unitLabel              String?           @map("unit_label") /// unit exactly as in the sheet
+  unitId                 String?           @map("unit_id") @db.Uuid
+  unit                   Unit?             @relation(fields: [unitId], references: [id])
+  storageTemperature     String?           @map("storage_temperature")
+  status                 RecordStatus      @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet") /// Material Mapping (Excel)
+  sourceRow     Int         @map("source_row")
+  crosswalkRow  Int?        @map("crosswalk_row") /// Material ID Crosswalk
+  brandSheetRow Int?        @map("brand_sheet_row") /// Meterials (All Brands)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  brandUsages MaterialBrandUsage[]
+
+  @@index([group])
+  @@index([mappingStatus])
+  @@index([bibleCode])
+  @@map("materials")
+}
+
+/// Which brands use a material. Flag 0 / FALSE in the sheet = not specified = no row.
+model MaterialBrandUsage {
+  id         String       @id @default(uuid()) @db.Uuid
+  materialId String       @map("material_id") @db.Uuid
+  material   Material     @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  brandId    String       @map("brand_id") @db.Uuid
+  brand      Brand        @relation(fields: [brandId], references: [id])
+  usage      BrandUsage
+  status     RecordStatus @default(draft)
+
+  importBatchId String?      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  sourceSheet   String?      @map("source_sheet")
+  sourceRow     Int?         @map("source_row")
+
+  @@unique([materialId, brandId])
+  @@index([brandId, usage])
+  @@map("material_brand_usages")
+}
+
+// ---------------------------------------------------------------- SKU (Selling)
+
+/// Central SKU category tree (L1 type · L2 category · L3 subcategory), shared by all brands.
+model SkuCategory {
+  id        String        @id @default(uuid()) @db.Uuid
+  code      String        @unique /// FOD, FOD-APP, FOD-APP-FRD
+  level     Int
+  nameEn    String?       @map("name_en")
+  nameTh    String?       @map("name_th")
+  parentId  String?       @map("parent_id") @db.Uuid
+  parent    SkuCategory?  @relation("SkuCategoryTree", fields: [parentId], references: [id])
+  children  SkuCategory[] @relation("SkuCategoryTree")
+  sortOrder Int           @map("sort_order")
+  status    RecordStatus  @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet")
+  sourceRow     Int         @map("source_row") /// first sheet row that names this category
+
+  skus SellingSku[]
+
+  @@index([parentId])
+  @@map("sku_categories")
+}
+
+/// A brand's own menu categories, one row per sheet row (kept flat, as in the sheet).
+model BrandMenuCategory {
+  id              String       @id @default(uuid()) @db.Uuid
+  brandId         String       @map("brand_id") @db.Uuid
+  brand           Brand        @relation(fields: [brandId], references: [id])
+  type            String? /// ประเภท
+  menuCategory    String?      @map("menu_category")
+  categoryFull    String?      @map("category_full")
+  subcategory     String?
+  subcategoryFull String?      @map("subcategory_full")
+  prefix          String? /// Category Prefix
+  sortOrder       Int          @map("sort_order")
+  status          RecordStatus @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet")
+  sourceRow     Int         @map("source_row")
+
+  @@index([brandId])
+  @@map("brand_menu_categories")
+}
+
+/// One selling SKU of one brand. Fields are stored exactly as the sheet has them (SKU data is not final).
+model SellingSku {
+  id                   String       @id @default(uuid()) @db.Uuid
+  masterRecordKey      String       @unique @map("master_record_key") /// e.g. NT:47229499
+  tkgCode              String?      @unique @map("tkg_code") /// permanent TKG SKU code — not allocated yet
+  brandId              String       @map("brand_id") @db.Uuid
+  brand                Brand        @relation(fields: [brandId], references: [id])
+  nameEn               String?      @map("name_en")
+  nameTh               String?      @map("name_th")
+  l1                   String? /// L1 / ประเภท
+  l2En                 String?      @map("l2_en")
+  l2Th                 String?      @map("l2_th")
+  l3En                 String?      @map("l3_en")
+  l3Th                 String?      @map("l3_th")
+  categoryCode         String?      @map("category_code") /// SKU Category Code (empty in today's sheet)
+  centralCategoryId    String?      @map("central_category_id") @db.Uuid /// set only when categoryCode matches
+  centralCategory      SkuCategory? @relation(fields: [centralCategoryId], references: [id])
+  brandMenuCategory    String?      @map("brand_menu_category")
+  brandMenuSubcategory String?      @map("brand_menu_subcategory")
+  reviewNote           String?      @map("review_note")
+  sheetBrandFlags      String[]     @map("sheet_brand_flags") /// TK/HK/NT/OK columns that are 1 in the sheet
+  status               RecordStatus @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet")
+  sourceRow     Int         @map("source_row")
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  posMappings PosMapping[]
+
+  @@index([brandId])
+  @@map("selling_skus")
+}
+
+/// How one store's POS knows a TKG SKU (snapshot). The POS codes are mappings, never the SKU's identity.
+model PosMapping {
+  id            String       @id @default(uuid()) @db.Uuid
+  skuId         String       @map("sku_id") @db.Uuid
+  sku           SellingSku   @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  storeId       String       @map("store_id") @db.Uuid
+  store         Store        @relation(fields: [storeId], references: [id])
+  posSkuCode    String?      @map("pos_sku_code")
+  posInternalId String?      @map("pos_internal_id")
+  posLabel      String?      @map("pos_label")
+  posGroup      String?      @map("pos_group")
+  posCategory   String?      @map("pos_category")
+  price         Decimal?     @db.Decimal(12, 2)
+  /// POS Sales Status at snapshot time: พร้อมขาย · งดขายชั่วคราว. Not a master approval status.
+  salesStatus   String?      @map("sales_status")
+  presentInPos  Boolean?     @map("present_in_pos")
+  readyToSell   Boolean?     @map("ready_to_sell")
+  snapshotDate  DateTime?    @map("snapshot_date") @db.Date
+  sourceUrl     String?      @map("source_url")
+  status        RecordStatus @default(draft)
+
+  importBatchId String      @map("import_batch_id") @db.Uuid
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id])
+  sourceSheet   String      @map("source_sheet")
+  sourceRow     Int         @map("source_row")
+
+  @@unique([storeId, posInternalId])
+  @@index([skuId])
+  @@index([posSkuCode])
+  @@map("pos_mappings")
+}
