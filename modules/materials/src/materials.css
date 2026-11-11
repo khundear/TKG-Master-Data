@@ -1,0 +1,9 @@
+/* Materials module: the few prototype styles that @tkg/ui pieces do not cover.
+   Imported once by apps/web/app/(modules)/materials/layout.tsx.
+   The prototype draws pills, tree rows and tabs as <button>; here they are links (filters live in the URL),
+   so the browser's link underline is removed. */
+a.pill,a.tree-row,a.tab{text-decoration:none}
+.brow.brow-brand{grid-template-columns:32px minmax(0,1fr) 44px;padding:7px 0;border-top:0}
+/* Whole-row links in plain tables (brands, units): text looks like the prototype's clickable rows. */
+a.mat-cell{color:inherit;text-decoration:none}
+tr:hover a.mat-cell,a.mat-cell:focus-visible{text-decoration:underline}
