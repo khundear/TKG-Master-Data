@@ -1,0 +1,750 @@
+<meta charset="utf-8">
+<title>TKG Master Data</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: ICW OS app shell — 64px top bar, 256px left menu, content on #F9F9F9. Light theme only, as in ICW OS. */
+@font-face{font-family:'Google Sans';src:url(fonts/gs-400.ttf) format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Google Sans';src:url(fonts/gs-500.ttf) format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Google Sans';src:url(fonts/gs-600.ttf) format('truetype');font-weight:600;font-display:swap}
+:root{
+  color-scheme:light;
+  --page:#F9F9F9; --surface:#FFFFFF; --hover:#F9F9F9; --active:#FAFAFA;
+  --line:#F2F2F2; --line-2:#E8E8E8; --line-3:#F7F7F7;
+  --ink:#222222; --ink-2:#666666; --ink-3:#6B6B6B; --ink-4:#999999; --ink-5:#444444;
+  --action:#0A66D6; --action-h:#0857B8; --action-bg:#EFF6FF;
+  --warn:#B54708; --warn-ic:#DC6803; --warn-bg:#FFFAEB;
+  --ok:#067647; --ok-bg:#ECFDF3; --bad:#B42318; --bad-bg:#FEF3F2; --mute-bg:#F2F2F2;
+  --body:'Google Sans','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;
+  --display:'Inter','Google Sans','Noto Sans Thai',-apple-system,sans-serif;
+}
+html,body{height:100%}
+body{background:var(--page);color:var(--ink);font-family:var(--body);font-size:14px}
+*{box-sizing:border-box}
+a{color:var(--action)}a:hover{color:var(--action-h)}
+button{font-family:inherit}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:3px solid rgba(10,102,214,.24);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:64px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);min-width:0}
+.brand img{height:28px;width:auto;display:block}
+.brand .sep{width:1px;height:22px;background:var(--line-2)}
+.brand .mod{font-size:18px;font-weight:600;white-space:nowrap}
+.tr{display:flex;align-items:center;gap:6px}
+.ibtn{width:40px;height:40px;border:none;background:transparent;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-5);cursor:pointer;text-decoration:none}
+.ibtn:hover{background:var(--hover);color:var(--ink-5)}
+.me{display:flex;align-items:center;gap:10px;padding:4px 8px;border-radius:8px}
+.av{width:36px;height:36px;border-radius:9999px;background:#F7F7F7;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ink-5);flex:none}
+.me-t{display:flex;flex-direction:column;line-height:1.3}
+.me-t b{font-size:14px;font-weight:600}.me-t span{font-size:12px;color:var(--ink-3)}
+.menu-btn{display:none}
+
+/* launcher */
+.launch{max-width:1200px;margin:0 auto;padding-block:40px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:32px}
+.hello h1{margin:0;font-size:30px;line-height:38px;font-weight:600;font-family:var(--display)}
+.hello p{margin:6px 0 0;color:var(--ink-2);font-size:15px}
+.grp h2{margin:0 0 12px;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.grp h2 .cnt{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;gap:14px;align-items:flex-start;text-decoration:none;color:var(--ink);text-align:left;width:100%;font:inherit;transition:border-color .15s, box-shadow .15s}
+a.tile:hover{border-color:var(--line-2);box-shadow:0 4px 12px rgba(16,24,40,.06);color:var(--ink)}
+.tile.off{cursor:default;opacity:.62}
+.tile .ti{width:44px;height:44px;border-radius:10px;background:#F7F7F7;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-5);flex:none}
+.tile.new .ti{background:var(--action-bg);border-color:#D1E9FF;color:var(--action)}
+.tile b{display:block;font-size:15px;font-weight:600}
+.tile .th{display:block;font-size:13px;color:var(--ink-2);margin-top:1px}
+.tile .d{display:block;font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.45}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:500;background:var(--mute-bg);color:var(--ink-2);white-space:nowrap}
+.tag.new{background:var(--action-bg);color:var(--action)}
+.foot{padding:16px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));text-align:center;font-size:12px;color:var(--ink-3)}
+.foot b{font-weight:600;color:var(--ink-2)}
+
+/* module shell */
+.shell{display:flex;min-height:calc(100% - 64px)}
+.side{width:256px;flex:none;background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));height:calc(100vh - 64px - env(safe-area-inset-top,0px));overflow-y:auto}
+.sec{display:flex;flex-direction:column;gap:2px}
+.sh{padding:0 12px 6px;font-size:12px;font-weight:500;color:var(--ink-3)}
+.nav{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 12px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;color:var(--ink-2)}
+.nav .ic{color:var(--ink-4)}
+.nav:hover{background:var(--hover);color:var(--ink-2)}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600}
+.nav.on .ic{color:var(--ink-2)}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:var(--mute-bg);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--ink-2);font-family:var(--display)}
+.cnt.warn{background:var(--warn-bg);color:var(--warn)}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.proto{align-self:flex-end;font-size:11px;color:var(--ink-3);border:1px solid var(--line-2);border-radius:9999px;padding:2px 8px}
+main{flex:1;min-width:0;padding-block:28px 40px;padding-left:max(16px,min(32px,4vw));padding-right:max(16px,min(32px,4vw));display:flex;flex-direction:column;gap:20px}
+
+/* content */
+.ph{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px}
+.ph h1{margin:0;font-size:26px;line-height:34px;font-weight:600;text-wrap:balance}
+.ph p{margin:6px 0 0;color:var(--ink-2);max-width:68ch;line-height:1.5}
+.crumb{font-size:13px;color:var(--ink-3);margin-bottom:4px}
+.crumb a{text-decoration:none}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{height:40px;padding:0 14px;border:1px solid var(--line-2);background:var(--surface);border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);text-decoration:none}
+.btn:hover{background:var(--hover);color:var(--ink)}
+.btn.pri{background:var(--action);border-color:var(--action);color:#fff}
+.btn.pri:hover{background:var(--action-h)}
+.btn.sm{height:32px;padding:0 10px;font-size:13px}
+.btn .ic{width:18px;height:18px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-h h2{margin:0;font-size:16px;font-weight:600}
+.card-h a,.lnk{font-size:13px;font-weight:600;text-decoration:none;background:none;border:none;color:var(--action);cursor:pointer;padding:0}
+.card-b{padding:16px 20px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.metric{padding:20px;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink)}
+a.metric:hover{border-color:var(--line-2);color:var(--ink)}
+.metric .l{font-size:14px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.metric .v{font-family:var(--display);font-size:30px;line-height:38px;font-weight:600;font-variant-numeric:tabular-nums}
+.metric .s{font-size:12px;color:var(--ink-3);line-height:1.45}
+.metric.warn .v{color:var(--warn)}
+.metric.warn .l .ic{color:var(--warn-ic)}
+.cols{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.col-main{flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.col-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.brow{display:grid;grid-template-columns:minmax(0,1.4fr) 56px minmax(0,1fr);gap:12px;align-items:center;padding:9px 20px;border-top:1px solid var(--line-3);font-size:14px;text-decoration:none;color:var(--ink);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
+.brow:hover{background:var(--hover)}
+.brow .en{color:var(--ink-3);font-size:12px}
+.brow .n{text-align:right;font-family:var(--display);font-weight:500;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:9999px;background:var(--mute-bg);overflow:hidden}
+.bar span{display:block;height:100%;border-radius:9999px;background:var(--action)}
+.bar.w span{background:var(--warn-ic)}
+.subh{padding:12px 20px 6px;font-size:12px;font-weight:600;color:var(--ink-3)}
+.dm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:13px;padding:9px 0;border-top:1px solid var(--line-3)}
+.dm:first-of-type{border-top:0}
+.dm b{font-weight:600}.dm .r{color:var(--ink-2)}.dm .x{grid-column:1/-1;font-size:12px;color:var(--ink-3)}
+.note{display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:12px;border:1px solid #FEDF89;background:var(--warn-bg);color:#93370D;font-size:13px;line-height:1.5}
+.note .ic{color:var(--warn-ic);margin-top:1px}
+.note.info{border-color:#D1E9FF;background:var(--action-bg);color:#1849A9}
+.note.info .ic{color:var(--action)}
+
+/* filters + table */
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.search{position:relative;flex:1 1 260px;min-width:0;max-width:420px}
+.search .ic{position:absolute;left:12px;top:10px;color:var(--ink-4)}
+.search input{width:100%;height:40px;border:1px solid var(--line-2);border-radius:8px;padding:0 12px 0 40px;font:inherit;font-size:14px;color:var(--ink);background:var(--surface)}
+.search input:focus{outline:none;border-color:var(--action);box-shadow:0 0 0 3px rgba(10,102,214,.12)}
+select.sel{height:40px;border:1px solid var(--line-2);border-radius:8px;padding:0 32px 0 12px;font:inherit;font-size:14px;color:var(--ink);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;max-width:100%;cursor:pointer}
+.pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{height:32px;padding:0 12px;border:1px solid var(--line-2);background:var(--surface);border-radius:9999px;font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.pill:hover{background:var(--hover)}
+.pill.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pill .c{font-family:var(--display);font-size:12px;opacity:.75}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;font-weight:500;color:var(--ink-3);padding:10px 16px;background:#FCFCFC;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line-3);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--hover)}
+td.mono,.mono{font-family:var(--display);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.r,th.r{text-align:right}
+.t2{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
+.bc{display:inline-flex;align-items:center;justify-content:center;height:20px;min-width:28px;padding:0 6px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--display);background:var(--mute-bg);color:var(--ink-5);margin-right:4px}
+.bc.dim{background:transparent;border:1px dashed var(--line-2);color:var(--ink-4);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:9999px;font-size:12px;font-weight:500;white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.info{background:var(--action-bg);color:var(--action)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.mute{background:var(--mute-bg);color:var(--ink-2)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
+.pager .acts{gap:6px}
+.empty{padding:48px 20px;text-align:center;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty .ei{width:48px;height:48px;border-radius:12px;background:#F7F7F7;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-4)}
+.empty b{color:var(--ink);font-size:15px;font-weight:600}
+.empty p{margin:0;max-width:52ch;line-height:1.5}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 16px;overflow-x:auto}
+.tab{height:44px;padding:0 12px;border:none;background:none;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.tab.on{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+.arrow{color:var(--ink-4);margin:0 6px}
+
+/* tree */
+.tree-row{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px;gap:12px;align-items:center;padding:8px 20px;border-top:1px solid var(--line-3);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font-size:14px;color:var(--ink)}
+.tree-row:hover{background:var(--hover)}
+.tree-row.l0{background:#FCFCFC;font-weight:600;font-size:13px;color:var(--ink-2);cursor:default}
+.tree-row.l1{font-weight:600}
+.tree-row.l2 .nm{padding-left:22px}
+.tree-row.l3 .nm{padding-left:44px;color:var(--ink-2)}
+.tree-row .cd{font-family:var(--display);font-size:11px;color:var(--ink-3);margin-left:6px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(16,24,40,.28);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--surface);z-index:41;box-shadow:-8px 0 24px rgba(16,24,40,.12);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dr-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 24px 16px;border-bottom:1px solid var(--line)}
+.dr-h h2{margin:4px 0 0;font-size:20px;line-height:28px;font-weight:600}
+.dr-b{flex:1;overflow-y:auto;padding:8px 24px 24px}
+.dr-s{padding:14px 0;border-bottom:1px solid var(--line-3)}
+.dr-s h3{margin:0 0 10px;font-size:12px;font-weight:600;color:var(--ink-3)}
+.kv{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 12px;font-size:14px}
+.kv dt{color:var(--ink-3)}.kv dd{margin:0;word-break:break-word}
+.dr-f{padding:14px 24px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--ink-3);gap:10px}
+
+@media (max-width:860px){
+  .menu-btn{display:inline-flex}
+  .me-t{display:none}
+  .side{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:0;bottom:0;height:auto;z-index:35;box-shadow:8px 0 24px rgba(16,24,40,.12);padding-left:max(12px,env(safe-area-inset-left,0px))}
+  .side[data-open="false"]{display:none}
+  .brand .mod{font-size:16px}
+  .brand img{height:22px}
+  .kv{grid-template-columns:110px minmax(0,1fr)}
+  .tree-row{grid-template-columns:minmax(0,1fr) 56px}
+  .tree-row .bar{display:none}
+}
+</style>
+
+<div id="app"><div class="loading">กำลังโหลดข้อมูล…</div></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- icons (Lucide paths) ---------- */
+const P={
+  home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+  chef:'<path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/><path d="M6 17h12"/>',
+  chart:'<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16h8"/><path d="M7 11h12"/><path d="M7 6h3"/>',
+  tree:'<path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/><path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/><path d="M3 5a2 2 0 0 0 2 2h3"/><path d="M3 3v13a2 2 0 0 0 2 2h3"/>',
+  scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  warn:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  swap:'<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+  layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  grid:'<circle cx="5" cy="5" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="19" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  menu:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  tag:'<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+  store:'<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/>',
+  barcode:'<path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/>',
+  utensils:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+  pause:'<circle cx="12" cy="12" r="10"/><path d="M10 15V9"/><path d="M14 15V9"/>',
+  list:'<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
+  building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
+  inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  contact:'<path d="M16 2v2"/><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><path d="M8 2v2"/><circle cx="12" cy="11" r="3"/><rect x="3" y="4" width="18" height="18" rx="2"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+  wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  check:'<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+  laptop:'<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>'
+};
+const ic=(n,s)=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"${s?` style="${s}"`:''}>${P[n]||''}</svg>`;
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>(n==null?'—':Number(n).toLocaleString('en-US'));
+const money=n=>(n==null?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}));
+const LOGO='logo.png';
+const jf=o=>esc(JSON.stringify(o));
+
+/* ---------- reference data ---------- */
+const BR=[['TK','ต้นเครื่อง'],['HK','หางเครื่อง'],['NT','NONNA TWIST'],['OK','อุ่นเครื่อง']];
+const BRN=Object.fromEntries(BR);
+const P1TH={PROTEIN:'โปรตีน',DAIRY:'นม',VEGETABLE:'ผัก',FRUITS:'ผลไม้',DRIED_GOODS:'ของแห้ง',SNACKS:'ขนม',BAKERY:'เบเกอรี่',CONDIMENTS:'เครื่องปรุง',PRESERVED:'อาหารแปรรูป',BEVERAGE:'เครื่องดื่ม',DESSERT:'ของหวาน',CONSUMABLE:'วัสดุสิ้นเปลือง',KITCHEN_EQUIPMENT:'อุปกรณ์ครัว',CLEANING:'ทำความสะอาด',CUSTOMER_SUPPLIES:'อุปกรณ์ลูกค้า',STAFF:'พนักงาน',FOOD_PACKING:'บรรจุภัณฑ์',OTHERS:'อื่น ๆ'};
+const GTH={RM:'วัตถุดิบ',SP:'วัสดุ',SM:'กึ่งสำเร็จรูป'};
+const MST={'ตรงกัน':'ok','ย้ายหมวด':'info','ต้องตัดสินใจ':'warn','คงไว้เป็น SM':'mute','ยกเลิก':'bad'};
+const MSTL={'ตรงกัน':'หมวดตรงกัน','ย้ายหมวด':'ย้ายหมวด','ต้องตัดสินใจ':'รอตัดสินใจ','คงไว้เป็น SM':'SM','ยกเลิก':'ยกเลิก'};
+
+let D=null, M=[], MA=[], S=[], BIB=[];
+const st={ // filter state per list
+  mat:{q:'',grp:'',p1:'',br:'',st:'',pork:false,bible:'',page:1,unit:''},
+  sku:{q:'',br:'',l1:'',l2:'',status:'',page:1,gap:''},
+  matReview:'ต้องตัดสินใจ', skuPos:{q:'',br:'',page:1}, idsPage:1, navOpen:false
+};
+const PER=50;
+
+/* ---------- helpers ---------- */
+const brandCodes=(br,all)=>BR.map(([c])=>br.includes(c)?`<span class="bc" title="${esc(BRN[c])}">${c}</span>`:(all?`<span class="bc dim" title="ยังไม่ระบุ">${c}</span>`:'')).join('')||'<span class="t2" style="margin:0">ยังไม่ระบุ</span>';
+const chip=(cls,txt)=>`<span class="chip ${cls}">${esc(txt)}</span>`;
+const metric=(l,v,s,opt={})=>`<${opt.href?'a href="#'+opt.href+'" data-act="'+(opt.act||'')+'"':'div'} class="card metric${opt.warn?' warn':''}"><span class="l">${esc(l)}${opt.warn?ic('warn'):''}</span><span class="v">${v}</span><span class="s">${s}</span></${opt.href?'a':'div'}>`;
+const pager=(total,page,key)=>{
+  const pages=Math.max(1,Math.ceil(total/PER)); const a=(page-1)*PER+1, b=Math.min(total,page*PER);
+  return `<div class="pager"><span>${total?`แสดง <span class="num">${fmt(a)}–${fmt(b)}</span> จาก <span class="num">${fmt(total)}</span> รายการ`:'ไม่พบรายการ'}</span>
+  <span class="acts"><button class="btn sm" data-page="${key}:${page-1}" ${page<=1?'disabled':''}>ก่อนหน้า</button><span class="num" style="align-self:center;padding:0 6px">${page} / ${pages}</span><button class="btn sm" data-page="${key}:${page+1}" ${page>=pages?'disabled':''}>ถัดไป</button></span></div>`;
+};
+const emptyState=(icon,title,body)=>`<div class="empty"><span class="ei">${ic(icon)}</span><b>${esc(title)}</b><p>${body}</p></div>`;
+const head=(title,desc,acts='',crumb='')=>`<div class="ph"><div style="min-width:0">${crumb?`<div class="crumb">${crumb}</div>`:''}<h1>${title}</h1>${desc?`<p>${desc}</p>`:''}</div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
+const isActive=m=>m.st!=='ยกเลิก';
+const grpOf=m=>m.st==='คงไว้เป็น SM'?'SM':(m.grp||'');
+
+/* ---------- shell ---------- */
+function topbar(mod){
+  return `<header class="top">
+    <div style="display:flex;align-items:center;gap:4px;min-width:0">
+      ${mod?`<button class="ibtn menu-btn" data-act="nav" aria-label="เปิดเมนู">${ic('menu')}</button>`:''}
+      <a class="brand" href="#home" aria-label="กลับหน้าหลัก"><img src="${LOGO}" alt="ต้นเครื่อง group">${mod?`<span class="sep"></span><span class="mod">${esc(mod)}</span>`:''}</a>
+    </div>
+    <div class="tr">
+      <button class="ibtn" aria-label="การแจ้งเตือน">${ic('bell')}</button>
+      <a class="ibtn" href="#home" aria-label="แอปทั้งหมด">${ic('grid')}</a>
+      <div class="me"><span class="av">DK</span><span class="me-t"><b>Danaiya Khemasmitt</b><span>ผู้จัดการ · บริษัท เอราเมง จำกัด</span></span></div>
+    </div>
+  </header>`;
+}
+function sidebar(items,cur,label){
+  let h=`<nav class="side" aria-label="${esc(label)}" data-open="${st.navOpen}">`;
+  for(const sec of items){
+    if(sec.foot){h+=`<div class="side-foot">`;}
+    else h+=`<div class="sec">${sec.h?`<div class="sh">${esc(sec.h)}</div>`:''}`;
+    for(const it of sec.items){
+      const on=it.id===cur;
+      h+=`<a class="nav${on?' on':''}" href="#${it.id}"${on?' aria-current="page"':''}>${ic(it.ic)}${esc(it.t)}${it.n!=null?`<span class="cnt${it.warn?' warn':''}">${fmt(it.n)}</span>`:''}</a>`;
+    }
+    if(sec.foot)h+=`<span class="proto">ต้นแบบ · ข้อมูลจริง</span>`;
+    h+=`</div>`;
+  }
+  return h+`</nav>`;
+}
+function matNav(){
+  const active=MA.length;
+  return [
+    {items:[{id:'mat',t:'ภาพรวม',ic:'home'}]},
+    {h:'วัตถุดิบและวัสดุ',items:[{id:'mat-list',t:'รายการ Material',ic:'box',n:active},{id:'mat-buy',t:'รายการซื้อ (ยี่ห้อ / แพ็ก)',ic:'cart'},{id:'mat-sm',t:'ของผลิตเอง (ครัวกลาง)',ic:'chef',n:MA.filter(m=>grpOf(m)==='SM').length},{id:'mat-brands',t:'การใช้ตามแบรนด์',ic:'chart'}]},
+    {h:'หมวดและหน่วย',items:[{id:'mat-cats',t:'หมวด Material',ic:'tree'},{id:'mat-units',t:'หน่วยและอัตราแปลง',ic:'scale'}]},
+    {h:'ตรวจทานข้อมูล',items:[{id:'mat-review',t:'รอจัดหมวด',ic:'warn',n:M.filter(m=>m.st==='ต้องตัดสินใจ').length,warn:true},{id:'mat-ids',t:'รหัสเก่า–ใหม่',ic:'swap',n:M.filter(m=>m.id!==m.legacy).length}]},
+    {h:'การกำกับดูแล',items:[{id:'mat-approve',t:'คำขออนุมัติ',ic:'layers'}]},
+    {h:'ข้อมูลและรายงาน',items:[{id:'mat-io',t:'นำเข้า / ส่งออกข้อมูล',ic:'dl'},{id:'mat-log',t:'ประวัติการเปลี่ยนแปลง',ic:'clock'}]},
+    {foot:true,items:[{id:'mat-config',t:'ตั้งค่า',ic:'gear'}]}
+  ];
+}
+function skuNav(){
+  return [
+    {items:[{id:'sku',t:'ภาพรวม',ic:'home'}]},
+    {h:'สินค้าขาย',items:[{id:'sku-list',t:'รายการ SKU',ic:'utensils',n:S.length},{id:'sku-stores',t:'การเปิดขายรายสาขา',ic:'store'},{id:'sku-pos',t:'รหัส POS',ic:'barcode'}]},
+    {h:'หมวดหมู่',items:[{id:'sku-cats',t:'หมวด SKU กลาง',ic:'tree'},{id:'sku-brandcats',t:'หมวดเมนูแบรนด์',ic:'tag'}]},
+    {h:'ตรวจทานข้อมูล',items:[{id:'sku-gaps',t:'ข้อมูลที่ต้องเติม',ic:'warn',n:S.filter(s=>!s.code).length,warn:true},{id:'sku-paused',t:'งดขายชั่วคราว',ic:'pause',n:S.filter(s=>s.status==='งดขายชั่วคราว').length}]},
+    {h:'การกำกับดูแล',items:[{id:'sku-approve',t:'คำขอเพิ่ม / ปรับ / เลิกขาย',ic:'layers'}]},
+    {h:'ข้อมูลและรายงาน',items:[{id:'sku-io',t:'นำเข้า / ส่งออกข้อมูล',ic:'dl'},{id:'sku-log',t:'ประวัติการเปลี่ยนแปลง',ic:'clock'}]},
+    {foot:true,items:[{id:'sku-config',t:'ตั้งค่า',ic:'gear'}]}
+  ];
+}
+const footer=()=>`<footer class="foot">© 2026 <b>บริษัท เอราเมง จำกัด</b> · Powered by <b>ICW.OS</b></footer>`;
+
+/* ---------- launcher ---------- */
+function launcher(){
+  const t=(o)=>{
+    const inner=`<span class="ti">${ic(o.ic,'width:22px;height:22px')}</span><span style="min-width:0"><b>${esc(o.t)}</b><span class="th">${esc(o.th)}</span><span class="d">${esc(o.d)}</span>${o.badge?`<span style="display:block;margin-top:8px">${o.badge}</span>`:''}</span>`;
+    return o.href?`<a class="tile${o.new?' new':''}" href="#${o.href}">${inner}</a>`:`<div class="tile off" title="ไม่อยู่ในต้นแบบนี้">${inner}</div>`;
+  };
+  const groups=[
+    ['พื้นฐาน',[
+      {t:'Materials',th:'วัตถุดิบและวัสดุ',d:'ทะเบียนวัตถุดิบ วัสดุ และแพ็กซื้อกลางทั้งเครือ',ic:'box',href:'mat',new:true,badge:`<span class="tag new">${fmt(MA.length)} รายการ</span>`},
+      {t:'SKU (Selling)',th:'สินค้าขาย',d:'ทะเบียนเมนูขาย 4 แบรนด์ พร้อมรหัส POS',ic:'utensils',href:'sku',new:true,badge:`<span class="tag new">${fmt(S.length)} รายการ</span>`}
+    ]]
+  ];
+  return topbar('')+`<div class="launch">
+    <div class="hello"><h1>สวัสดี, Danaiya</h1><p>เลือกแอปที่ต้องการใช้งาน</p></div>
+    ${groups.map(([g,a])=>`<section class="grp"><h2>${esc(g)}<span class="cnt">${a.length} แอป</span></h2><div class="tiles">${a.map(t).join('')}</div></section>`).join('')}
+    <div class="note info">${ic('info')}<span>ต้นแบบนี้ใช้ข้อมูลจริงจากไฟล์ในโฟลเดอร์ Data</span></div>
+  </div>`+footer();
+}
+
+/* ---------- materials ---------- */
+function filterMats(f){
+  const q=f.q.trim().toLowerCase();
+  return M.filter(m=>{
+    if(!f.st && !isActive(m))return false;
+    if(f.st && m.st!==f.st)return false;
+    if(f.grp && grpOf(m)!==f.grp)return false;
+    if(f.p1 && m.p1!==f.p1)return false;
+    if(f.pork && !(m.p2==='PORK' || /หมู|เบคอน|แฮม|bacon|pork/i.test(m.name)))return false;
+    if(f.bible && !(m.bible===f.bible||m.bible.startsWith(f.bible+'_')))return false;
+    if(f.unit==='__none' && m.unit)return false;
+    if(f.unit && f.unit!=='__none' && m.unit!==f.unit)return false;
+    if(f.br==='__none' && m.br.length)return false;
+    if(f.br==='__multi' && m.br.length<2)return false;
+    if(f.br && f.br.length===2 && !m.br.includes(f.br))return false;
+    if(q && !(m.id.toLowerCase().includes(q)||m.legacy.toLowerCase().includes(q)||m.name.toLowerCase().includes(q)||m.catTh.toLowerCase().includes(q)))return false;
+    return true;
+  });
+}
+function matOverview(){
+  const rm={},sp={};
+  for(const m of MA){const g=grpOf(m); if(g==='RM')rm[m.p1]=(rm[m.p1]||0)+1; else if(g==='SP')sp[m.p1]=(sp[m.p1]||0)+1;}
+  const cnt=g=>MA.filter(m=>grpOf(m)===g).length;
+  const multi=MA.filter(m=>m.br.length>=2).length, none=MA.filter(m=>!m.br.length).length;
+  const dec=M.filter(m=>m.st==='ต้องตัดสินใจ').length, chk=M.filter(m=>m.flag==='ต้องตรวจสอบ').length;
+  const rows=(obj,grp)=>{const arr=Object.entries(obj).sort((a,b)=>b[1]-a[1]);const max=Math.max(...arr.map(a=>a[1]),1);
+    return arr.map(([k,n])=>`<button class="brow" data-go="mat-list" data-f='${jf({grp,p1:k})}'><span>${esc(P1TH[k]||k)} <span class="en">${esc(k)}</span></span><span class="n">${fmt(n)}</span><span class="bar"><span style="width:${Math.max(2,Math.round(n/max*100))}%"></span></span></button>`).join('');};
+  const bc=BR.map(([c])=>[c,MA.filter(m=>m.br.includes(c)).length]); const bmax=Math.max(...bc.map(b=>b[1]));
+  return head('ภาพรวม','ทะเบียนวัตถุดิบและวัสดุกลางของทั้งเครือ แก้ที่นี่ที่เดียว ทุกแบรนด์และทุกแอปใช้ข้อมูลเดียวกัน',
+    `<a class="btn" href="#mat-io">${ic('dl')}นำเข้า / ส่งออก</a><a class="btn pri" href="#mat-approve">${ic('plus')}ขอเพิ่ม Material</a>`)+
+  `<div class="metrics">
+    ${metric('Material ทั้งหมด',fmt(MA.length),`RM ${fmt(cnt('RM'))} · SP ${fmt(cnt('SP'))} · SM ${fmt(cnt('SM'))} · ไม่นับยกเลิก ${M.length-MA.length}`,{href:'mat-list',act:'reset-mat'})}
+    ${metric('ใช้ร่วมหลายแบรนด์',fmt(multi),'ระบุใช้ตั้งแต่ 2 แบรนด์ขึ้นไป',{href:'mat-list',act:'mat-multi'})}
+    ${metric('ยังไม่ระบุแบรนด์',fmt(none),'ทั้ง 4 แบรนด์ยังไม่ระบุว่าใช้ (ไม่ใช่ห้ามใช้)',{href:'mat-list',act:'mat-none'})}
+    ${metric('ต้องตัดสินใจ / ไม่ครบ',fmt(dec+chk),`รอจัดหมวด ${dec} · ต้องตรวจสอบ ${chk}`,{href:'mat-review',warn:true})}
+  </div>
+  <div class="cols"><div class="col-main">
+    <section class="card"><div class="card-h"><h2>Material ตามหมวดหลัก</h2><a href="#mat-cats">ดูหมวดทั้งหมด</a></div>
+      <div class="subh">วัตถุดิบ (RM) · ${fmt(cnt('RM'))}</div>${rows(rm,'RM')}
+      <div class="subh" style="border-top:1px solid var(--line);margin-top:6px;padding-top:14px">วัสดุ (SP) · ${fmt(cnt('SP'))}</div>${rows(sp,'SP')}<div style="height:8px"></div>
+    </section>
+  </div><div class="col-side">
+    <section class="card card-b"><h2 style="margin:0 0 4px;font-size:16px;font-weight:600">การใช้ตามแบรนด์</h2><p style="margin:0 0 8px;font-size:12px;color:var(--ink-3)">Material ที่ระบุว่าใช้ ยอดทับซ้อนกัน ห้ามรวมเป็นยอดกลาง</p>
+      ${bc.map(([c,n])=>`<button class="brow" style="grid-template-columns:32px minmax(0,1fr) 44px;padding:7px 0;border-top:0" data-go="mat-list" data-f='{"br":"${c}"}'><b style="font-size:13px">${c}</b><span class="bar"><span style="width:${Math.round(n/bmax*100)}%"></span></span><span class="n">${fmt(n)}</span></button>`).join('')}
+    </section>
+    <section class="card card-b"><h2 style="margin:0 0 6px;font-size:16px;font-weight:600">โดเมนและผู้ใช้ข้อมูล</h2>
+      <div class="dm"><b>Material</b><span class="r">${fmt(MA.length)} รายการ</span><span class="x">อ่านโดย Recipes, Food Cost, Purchasing</span></div>
+      <div class="dm"><b>หมวด Material</b><span class="r">${BIB.filter(b=>b.lvl===1).length} · ${BIB.filter(b=>b.lvl===2).length} · ${BIB.filter(b=>b.lvl===3).length}</span><span class="x">หลัก · ย่อย · ละเอียด</span></div>
+      <div class="dm"><b>หน่วยนับ</b><span class="r">ใช้ร่วม</span><span class="x">ต้นทางคือ Company Core · หน่วยนับ</span></div>
+      <div class="dm"><b>แบรนด์และสาขา</b><span class="r">ใช้ร่วม</span><span class="x">ต้นทางคือ Company Core · สาขา</span></div>
+    </section>
+    <section class="card card-b"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0;font-size:16px;font-weight:600">เปลี่ยนแปลงล่าสุด</h2><a class="lnk" href="#mat-log">ดูทั้งหมด</a></div>
+      <p style="margin:0;font-size:13px;color:var(--ink-3);line-height:1.5">ยังไม่มีการเปลี่ยนแปลง ทุกการแก้ไขข้อมูลหลักจะปรากฏที่นี่</p></section>
+  </div></div>`;
+}
+function matTable(list,f,key,opts={}){
+  const page=Math.min(f.page,Math.max(1,Math.ceil(list.length/PER)));f.page=page;
+  const rows=list.slice((page-1)*PER,page*PER);
+  const body=rows.length?rows.map(m=>`<tr data-mat="${esc(m.legacy)}">
+    <td class="mono">${esc(m.id)}${m.id!==m.legacy?`<span class="t2">เดิม ${esc(m.legacy)}</span>`:''}</td>
+    <td style="min-width:220px">${esc(m.name)}${m.desc?`<span class="t2">${esc(m.desc)}</span>`:''}</td>
+    <td style="min-width:180px">${m.p1?`${esc(P1TH[m.p1]||m.p1)}<span class="t2">${esc([grpOf(m),m.p2,m.p3].filter(Boolean).join(' / '))}</span>`:`<span style="color:var(--ink-3)">${esc(m.curCat)}</span>`}</td>
+    <td style="white-space:nowrap">${brandCodes(m.br,true)}</td>
+    <td style="white-space:nowrap">${m.unit?esc(m.unit.split(' - ')[1]||m.unit):'<span style="color:var(--ink-4)">—</span>'}</td>
+    <td>${chip(MST[m.st]||'mute',MSTL[m.st]||m.st)}</td></tr>`).join('')
+    :`<tr><td colspan="6" style="cursor:default">${emptyState('search','ไม่พบ Material','ลองเปลี่ยนคำค้นหรือล้างตัวกรอง')}</td></tr>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>รหัส Material</th><th>ชื่อ</th><th>หมวด</th><th>แบรนด์ที่ใช้</th><th>หน่วย</th><th>สถานะหมวด</th></tr></thead><tbody>${body}</tbody></table></div>${pager(list.length,page,key)}`;
+}
+function matList(){
+  const f=st.mat; const list=filterMats(f);
+  const p1s=[...new Set(M.filter(m=>!f.grp||grpOf(m)===f.grp).map(m=>m.p1).filter(Boolean))].sort();
+  const brPills=[['','ทุกแบรนด์'],...BR.map(([c,n])=>[c,c+' · '+n]),['__multi','ใช้ร่วม 2+'],['__none','ยังไม่ระบุ']];
+  const active=[f.q,f.grp,f.p1,f.br,f.st,f.pork,f.bible,f.unit].some(Boolean);
+  return head('รายการ Material',`ค้นหาจากรหัส ชื่อ หรือรหัสเดิม คลิกแถวเพื่อดูรายละเอียด`,
+    `<a class="btn" href="#mat-io">${ic('dl')}ส่งออก</a><a class="btn pri" href="#mat-approve">${ic('plus')}ขอเพิ่ม Material</a>`,`<a href="#mat">Materials</a> / รายการ Material`)+
+  `<div class="pills" role="group" aria-label="เลือกแบรนด์">${brPills.map(([v,l])=>`<button class="pill${f.br===v?' on':''}" data-set="mat.br" data-v="${v}" aria-pressed="${f.br===v}">${esc(l)}</button>`).join('')}</div>
+  <section class="card">
+    <div class="tools">
+      <label class="search">${ic('search')}<input id="mat-q" type="search" placeholder="ค้นหารหัส ชื่อ หรือหมวด" value="${esc(f.q)}" aria-label="ค้นหา Material"></label>
+      <select class="sel" id="mat-grp" data-set="mat.grp" aria-label="กลุ่ม"><option value="">ทุกกลุ่ม</option>${['RM','SP','SM'].map(g=>`<option value="${g}"${f.grp===g?' selected':''}>${g} · ${GTH[g]}</option>`).join('')}</select>
+      <select class="sel" id="mat-p1" data-set="mat.p1" aria-label="หมวดหลัก"><option value="">ทุกหมวดหลัก</option>${p1s.map(p=>`<option value="${p}"${f.p1===p?' selected':''}>${esc(P1TH[p]||p)} · ${p}</option>`).join('')}</select>
+      <select class="sel" id="mat-st" data-set="mat.st" aria-label="สถานะหมวด"><option value="">ทุกสถานะ (ไม่รวมยกเลิก)</option>${Object.keys(MST).map(s=>`<option value="${s}"${f.st===s?' selected':''}>${esc(MSTL[s])}</option>`).join('')}</select>
+      <button class="pill${f.pork?' on':''}" data-act="pork" aria-pressed="${f.pork}" title="Material ที่มีหมู ใช้กรองสำหรับแบรนด์/เมนูที่ไม่ใช้หมู">มีหมู</button>
+      ${f.bible?`<button class="pill on" data-act="clear-bible">หมวด ${esc(f.bible)} ${ic('x','width:14px;height:14px')}</button>`:''}
+      ${f.unit?`<button class="pill on" data-act="clear-unit">หน่วย ${esc(f.unit==='__none'?'ยังไม่ระบุ':f.unit)} ${ic('x','width:14px;height:14px')}</button>`:''}
+      ${active?`<button class="lnk" data-act="reset-mat" style="margin-left:auto">ล้างตัวกรอง</button>`:''}
+    </div>
+    ${matTable(list,f,'mat')}
+  </section>`;
+}
+function matSM(){
+  const list=M.filter(m=>grpOf(m)==='SM');
+  return head('ของผลิตเอง (ครัวกลาง)','รายการกึ่งสำเร็จรูป (SM) ที่ครัวกลางผลิตเอง อยู่นอกขอบเขต RM/SP ของ Bible จึงแยกไว้ที่นี่','',`<a href="#mat">Materials</a> / ของผลิตเอง`)+
+  `<section class="card">${matTable(list,{page:1},'sm')}</section>`;
+}
+function matBrands(){
+  const combos={};for(const m of MA){const k=m.br.length?m.br.join(' + '):'ยังไม่ระบุ';combos[k]=(combos[k]||0)+1;}
+  const arr=Object.entries(combos).sort((a,b)=>b[1]-a[1]); const max=arr[0][1];
+  const bc=BR.map(([c,n])=>{const mine=MA.filter(m=>m.br.includes(c));return {c,n,all:mine.length,only:mine.filter(m=>m.br.length===1).length,shared:mine.filter(m=>m.br.length>1).length};});
+  return head('การใช้ตามแบรนด์','แต่ละ Material ระบุได้หลายแบรนด์ ค่าว่างในไฟล์หมายถึง "ยังไม่ระบุ" ไม่ใช่ "ห้ามใช้"','',`<a href="#mat">Materials</a> / การใช้ตามแบรนด์`)+
+  `<section class="card"><div class="tbl-wrap"><table><thead><tr><th>แบรนด์</th><th class="r">ระบุว่าใช้</th><th class="r">ใช้แบรนด์เดียว</th><th class="r">ใช้ร่วมแบรนด์อื่น</th></tr></thead><tbody>
+    ${bc.map(b=>`<tr data-go="mat-list" data-f='{"br":"${b.c}"}'><td><span class="bc">${b.c}</span>${esc(b.n)}</td><td class="r num">${fmt(b.all)}</td><td class="r num">${fmt(b.only)}</td><td class="r num">${fmt(b.shared)}</td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card"><div class="card-h"><h2>ชุดแบรนด์ที่ใช้ร่วมกัน</h2><span class="t2" style="margin:0">${arr.length} ชุด</span></div>
+    ${arr.map(([k,n])=>`<button class="brow" data-go="mat-list" data-f='${jf(k==='ยังไม่ระบุ'?{br:'__none'}:{q:'',br:k.split(' + ').length===1?k:'__multi'})}'><span>${k==='ยังไม่ระบุ'?'<span style="color:var(--warn)">ยังไม่ระบุแบรนด์</span>':k.split(' + ').map(c=>`<span class="bc">${c}</span>`).join('')}</span><span class="n">${fmt(n)}</span><span class="bar${k==='ยังไม่ระบุ'?' w':''}"><span style="width:${Math.max(2,Math.round(n/max*100))}%"></span></span></button>`).join('')}
+  </section>`;
+}
+function matCats(){
+  let rows='';
+  for(const b of BIB){
+    const name=b.lvl===0?`${b.grp} · ${b.th}`:b.lvl===1?`${b.th} <span class="cd">${b.p1}</span>`:b.lvl===2?`${b.th} <span class="cd">${b.p2}</span>`:`${b.th3||b.th} <span class="cd">${b.p3}</span>`;
+    const n=MA.filter(m=>m.bible===b.code||m.bible.startsWith(b.code+'_')).length;
+    if(b.lvl===0){rows+=`<div class="tree-row l0"><span class="nm">${name}</span><span class="num" style="text-align:right">${fmt(MA.filter(m=>grpOf(m)===b.grp).length)}</span><span></span></div>`;continue;}
+    rows+=`<button class="tree-row l${b.lvl}" data-go="mat-list" data-f='{"bible":"${esc(b.code)}"}'><span class="nm">${name}</span><span class="num" style="text-align:right">${fmt(n)}</span><span class="bar"><span style="width:${Math.min(100,Math.round(n/2.3))}%"></span></span></button>`;
+  }
+  return head('หมวด Material','Material Category Master Bible 3 ระดับ (หลัก · ย่อย · ละเอียด) คลิกหมวดเพื่อดูรายการในหมวดนั้น',`<span class="tag">${BIB.filter(b=>b.lvl===1).length} · ${BIB.filter(b=>b.lvl===2).length} · ${BIB.filter(b=>b.lvl===3).length} หมวด</span>`,`<a href="#mat">Materials</a> / หมวด Material`)+
+  `<section class="card"><div class="tree-row l0" style="background:#FCFCFC;color:var(--ink-3);font-size:12px;font-weight:500"><span>หมวด</span><span style="text-align:right">Material</span><span></span></div>${rows}</section>`;
+}
+function matUnits(){
+  const u={};for(const m of MA){const k=m.unit||'__none';u[k]=(u[k]||0)+1;}
+  const arr=Object.entries(u).sort((a,b)=>b[1]-a[1]); const none=u.__none||0;
+  return head('หน่วยและอัตราแปลง','หน่วยที่ใช้รับ นับ และใช้ผลิตของแต่ละ Material รายการหน่วยกลางมาจาก Company Core · หน่วยนับ','',`<a href="#mat">Materials</a> / หน่วยและอัตราแปลง`)+
+  `<div class="note">${ic('warn')}<span><b>${fmt(none)} จาก ${fmt(MA.length)}</b> รายการยังไม่ระบุหน่วย และไฟล์ยังไม่มีอัตราแปลง (ซื้อ → รับ → นับ → ใช้) ต้องเติมก่อนนำไปใช้กับ Recipes และ Food Cost</span></div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>รหัสหน่วย</th><th>ชื่อหน่วย</th><th class="r">Material</th><th>อัตราแปลง</th></tr></thead><tbody>
+  ${arr.map(([k,n])=>k==='__none'?`<tr data-go="mat-list" data-f='{"unit":"__none"}'><td class="mono">—</td><td style="color:var(--warn)">ยังไม่ระบุหน่วย</td><td class="r num">${fmt(n)}</td><td>${chip('warn','ต้องเติม')}</td></tr>`:`<tr data-go="mat-list" data-f='${jf({unit:k})}'><td class="mono">${esc(k.split(' - ')[0])}</td><td>${esc(k.split(' - ')[1]||k)}</td><td class="r num">${fmt(n)}</td><td>${chip('mute','ยังไม่มีข้อมูล')}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+function matReview(){
+  const tabs=[['ต้องตัดสินใจ','รอตัดสินใจ','Excel ไม่มีหมวดรองรับ ต้องเลือกหมวดหรือเปิดหมวดใหม่'],['ย้ายหมวด','ย้ายหมวด','อยู่ผิดหมวดหรือต้องแยกหมวดย่อย ระบบเสนอหมวดใหม่ให้แล้ว'],['__chk','ต้องตรวจสอบ','จับคู่ Bible ไม่ได้ ต้องให้ผู้รู้ยืนยัน']];
+  const cur=st.matReview; const list=cur==='__chk'?M.filter(m=>m.flag==='ต้องตรวจสอบ'):M.filter(m=>m.st===cur);
+  const desc=tabs.find(t=>t[0]===cur)[2];
+  return head('รอจัดหมวด','เทียบหมวดปัจจุบันกับหมวดใน Excel (Food Cost Management System) รายการที่นี่ยังใช้งานได้ แต่ต้องยืนยันหมวดก่อนล็อกข้อมูล','',`<a href="#mat">Materials</a> / รอจัดหมวด`)+
+  `<section class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>{const n=k==='__chk'?M.filter(m=>m.flag==='ต้องตรวจสอบ').length:M.filter(m=>m.st===k).length;return `<button class="tab${cur===k?' on':''}" role="tab" aria-selected="${cur===k}" data-act="rtab" data-v="${k}">${l}<span class="cnt${k!=='ย้ายหมวด'?' warn':''}" style="margin:0">${fmt(n)}</span></button>`}).join('')}</div>
+  <div style="padding:12px 16px;font-size:13px;color:var(--ink-3);border-bottom:1px solid var(--line)">${esc(desc)}</div>
+  <div class="tbl-wrap"><table><thead><tr><th>รหัส Material</th><th>ชื่อ</th><th>หมวดปัจจุบัน</th><th>หมวดที่เสนอ</th><th>หมายเหตุ</th></tr></thead><tbody>
+  ${list.map(m=>`<tr data-mat="${esc(m.legacy)}"><td class="mono">${esc(m.id)}</td><td style="min-width:200px">${esc(m.name)}</td><td style="white-space:nowrap">${esc(m.curCat)}<span class="t2 mono">${esc(m.curCatId)}</span></td><td style="min-width:180px">${m.code?`${esc(m.catTh)}<span class="t2 mono">${esc(m.code)}</span>`:'<span style="color:var(--warn)">ยังไม่มีหมวดรองรับ</span>'}</td><td style="min-width:200px;color:var(--ink-2)">${esc(m.note)||'—'}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+function matIds(){
+  const list=M.filter(m=>m.id!==m.legacy); const f={page:st.idsPage}; const page=Math.min(f.page,Math.ceil(list.length/PER)||1);
+  return head('รหัสเก่า–ใหม่','รายการที่เปลี่ยนรหัสตามหมวดที่ยืนยันแล้ว เก็บรหัสเดิมไว้เพื่อย้อนตรวจและเชื่อมข้อมูลเก่า',`<span class="tag">${fmt(list.length)} จาก ${fmt(M.length)} รายการเปลี่ยนรหัส</span>`,`<a href="#mat">Materials</a> / รหัสเก่า–ใหม่`)+
+  `<section class="card"><div class="tbl-wrap"><table><thead><tr><th>รหัสเดิม</th><th></th><th>รหัสปัจจุบัน</th><th>ชื่อ</th><th>หมวด</th></tr></thead><tbody>
+  ${list.slice((page-1)*PER,page*PER).map(m=>`<tr data-mat="${esc(m.legacy)}"><td class="mono" style="text-decoration:line-through;color:var(--ink-3)">${esc(m.legacy)}</td><td style="color:var(--ink-4)">→</td><td class="mono" style="color:var(--ink)">${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.catTh)}</td></tr>`).join('')}
+  </tbody></table></div>${pager(list.length,page,'ids')}</section>`;
+}
+function matDrawer(m){
+  const kv=(k,v)=>`<dt>${esc(k)}</dt><dd>${v||'<span style="color:var(--ink-4)">—</span>'}</dd>`;
+  return `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-t">
+    <div class="dr-h"><div style="min-width:0"><span class="mono">${esc(m.id)}</span><h2 id="dr-t">${esc(m.name)}</h2><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${chip(MST[m.st]||'mute',MSTL[m.st]||m.st)}${m.flag==='ต้องตรวจสอบ'?chip('warn','ต้องตรวจสอบ'):''}${grpOf(m)?`<span class="tag">${grpOf(m)} · ${GTH[grpOf(m)]}</span>`:''}</div></div><button class="ibtn" data-act="close" aria-label="ปิด">${ic('x')}</button></div>
+    <div class="dr-b">
+      <div class="dr-s"><h3>ข้อมูลหลัก</h3><dl class="kv">${kv('รหัสปัจจุบัน',`<span class="mono" style="color:var(--ink)">${esc(m.id)}</span>`)}${kv('รหัสเดิม',m.legacy!==m.id?`<span class="mono">${esc(m.legacy)}</span> · ${esc(m.idChange)}`:'ไม่เปลี่ยน')}${kv('คำอธิบาย',esc(m.desc))}${kv('ประเภท',esc(m.kind))}</dl></div>
+      <div class="dr-s"><h3>หมวด</h3><dl class="kv">${kv('หมวดปัจจุบัน',`${esc(m.curCat)} <span class="mono">${esc(m.curCatId)}</span>`)}${kv('หมวดที่เสนอ',m.code?`${esc(m.catTh)} <span class="mono">${esc(m.code)}</span>`:'')}${kv('ลำดับหมวด',esc([m.grp,m.p1,m.p2,m.p3].filter(Boolean).join(' / ')))}${kv('Bible Code',m.bible?`<span class="mono">${esc(m.bible)}</span>`:'')}${kv('หมายเหตุ',esc(m.note))}</dl></div>
+      <div class="dr-s"><h3>แบรนด์ที่ใช้</h3>${brandCodes(m.br,true)}<p style="margin:8px 0 0;font-size:12px;color:var(--ink-3)">ช่องที่เป็นเส้นประ = ยังไม่ระบุ ไม่ใช่ห้ามใช้</p></div>
+      <div class="dr-s" style="border:0"><h3>หน่วยและการจัดเก็บ</h3><dl class="kv">${kv('หน่วยรับ / นับ',esc(m.unit))}${kv('อุณหภูมิ',esc(m.temp))}${kv('อัตราแปลง','<span style="color:var(--ink-3)">ยังไม่มีในไฟล์</span>')}</dl></div>
+    </div>
+    <div class="dr-f"><a class="btn" href="#mat-log">${ic('clock')}ประวัติ</a><a class="btn pri" href="#mat-approve">ขอแก้ไขข้อมูล</a></div>
+  </aside>`;
+}
+
+/* ---------- SKU ---------- */
+function filterSkus(f){
+  const q=f.q.trim().toLowerCase();
+  return S.filter(s=>{
+    if(f.br && s.brand!==f.br)return false;
+    if(f.l1 && (s.l1||'__none')!==f.l1)return false;
+    if(f.l2 && s.l2th!==f.l2)return false;
+    if(f.status && s.status!==f.status)return false;
+    if(f.gap==='note' && !s.note)return false;
+    if(f.gap==='price' && s.price!=null)return false;
+    if(f.gap==='l1' && s.l1)return false;
+    if(f.gap==='pos' && s.posCode)return false;
+    if(q && !((s.en||'').toLowerCase().includes(q)||(s.th||'').toLowerCase().includes(q)||s.key.toLowerCase().includes(q)||(s.posId||'').includes(q)||(s.posCode||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+}
+function skuOverview(){
+  const ready=S.filter(s=>s.status==='พร้อมขาย').length, paused=S.length-ready;
+  const types={};for(const s of S){const k=s.l1||'ยังไม่ระบุ';types[k]=(types[k]||0)+1;}
+  const tarr=Object.entries(types).sort((a,b)=>b[1]-a[1]); const tmax=tarr[0][1];
+  const byB=BR.map(([c,n])=>{const a=S.filter(s=>s.brand===c);return {c,n,store:(a[0]||{}).store,all:a.length,ready:a.filter(s=>s.status==='พร้อมขาย').length,paused:a.filter(s=>s.status!=='พร้อมขาย').length,date:(a[0]||{}).date};});
+  const noCode=S.filter(s=>!s.code).length;
+  return head('ภาพรวม','ทะเบียนเมนูขายของ 4 แบรนด์ ชื่อและหมวดกลางเก็บที่นี่ รหัส POS เป็นการจับคู่กับรหัส TKG ไม่ได้ใช้แทนกัน',
+    `<a class="btn" href="#sku-io">${ic('dl')}นำเข้า / ส่งออก</a><a class="btn pri" href="#sku-approve">${ic('plus')}ขอเพิ่ม SKU</a>`)+
+  `<div class="note info">${ic('info')}<span>ข้อมูล SKU ยังไม่ final ตัวเลขด้านล่างคำนวณจากไฟล์ล่าสุด (POS snapshot ${esc(byB.map(b=>b.date).filter(Boolean).sort()[0]||'')} ถึง ${esc(byB.map(b=>b.date).filter(Boolean).sort().pop()||'')}) และจะเปลี่ยนเมื่อปรับฐานข้อมูล</span></div>
+  <div class="metrics">
+    ${metric('SKU ทั้งหมด',fmt(S.length),'TK · HK · NT · OK',{href:'sku-list',act:'reset-sku'})}
+    ${metric('พร้อมขาย',fmt(ready),`${Math.round(ready/S.length*1000)/10}% ของทั้งหมด`,{href:'sku-list',act:'sku-ready'})}
+    ${metric('งดขายชั่วคราว',fmt(paused),'ยังอยู่ใน POS แต่ปิดขาย',{href:'sku-paused'})}
+    ${metric('ยังไม่มีรหัสหมวดกลาง',fmt(noCode),'SKU Category Code ยังว่าง',{href:'sku-gaps',warn:true})}
+  </div>
+  <div class="cols"><div class="col-main">
+    <section class="card"><div class="card-h"><h2>SKU ตามแบรนด์</h2><a href="#sku-stores">ดูรายสาขา</a></div>
+      <div class="tbl-wrap"><table><thead><tr><th>แบรนด์</th><th>สาขา (POS)</th><th class="r">ทั้งหมด</th><th class="r">พร้อมขาย</th><th class="r">งดขาย</th></tr></thead><tbody>
+      ${byB.map(b=>`<tr data-go="sku-list" data-f='{"br":"${b.c}"}'><td><span class="bc">${b.c}</span>${esc(b.n)}</td><td>${esc(b.store)}</td><td class="r num">${fmt(b.all)}</td><td class="r num">${fmt(b.ready)}</td><td class="r num" style="${b.paused?'color:var(--warn)':''}">${fmt(b.paused)}</td></tr>`).join('')}
+      </tbody></table></div></section>
+    <section class="card"><div class="card-h"><h2>SKU ตามประเภท</h2><a href="#sku-cats">ดูหมวดกลาง</a></div>
+      ${tarr.map(([k,n])=>`<button class="brow" data-go="sku-list" data-f='${jf({l1:k==='ยังไม่ระบุ'?'__none':k})}'><span>${k==='ยังไม่ระบุ'?'<span style="color:var(--warn)">ยังไม่ระบุประเภท</span>':esc(k)}</span><span class="n">${fmt(n)}</span><span class="bar${k==='ยังไม่ระบุ'?' w':''}"><span style="width:${Math.max(2,Math.round(n/tmax*100))}%"></span></span></button>`).join('')}<div style="height:8px"></div>
+    </section>
+  </div><div class="col-side">
+    <section class="card card-b"><h2 style="margin:0 0 6px;font-size:16px;font-weight:600">โดเมนและผู้ใช้ข้อมูล</h2>
+      <div class="dm"><b>SKU ขาย</b><span class="r">${fmt(S.length)} รายการ</span><span class="x">อ่านโดย Recipes, Food Cost และรายงานยอดขาย</span></div>
+      <div class="dm"><b>หมวด SKU กลาง</b><span class="r">${new Set(D.cats.map(c=>c[3])).size} · ${D.cats.length}</span><span class="x">หมวด · หมวดย่อย ใช้ร่วมทุกแบรนด์</span></div>
+      <div class="dm"><b>หมวดเมนูแบรนด์</b><span class="r">${D.bmc.length}</span><span class="x">หมวดตามเมนูของแต่ละร้าน</span></div>
+      <div class="dm"><b>สาขาและแบรนด์</b><span class="r">ใช้ร่วม</span><span class="x">ต้นทางคือ Company Core · สาขา</span></div>
+    </section>
+    <section class="card card-b"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0;font-size:16px;font-weight:600">เปลี่ยนแปลงล่าสุด</h2><a class="lnk" href="#sku-log">ดูทั้งหมด</a></div>
+      <p style="margin:0;font-size:13px;color:var(--ink-3);line-height:1.5">ยังไม่มีการเปลี่ยนแปลง ทุกการแก้ไขข้อมูลหลักจะปรากฏที่นี่</p></section>
+  </div></div>`;
+}
+function skuTable(list,f,key,cols){
+  const page=Math.min(f.page,Math.max(1,Math.ceil(list.length/PER)));f.page=page;
+  const rows=list.slice((page-1)*PER,page*PER);
+  const body=rows.length?rows.map(s=>`<tr data-sku="${esc(s.key)}">
+    <td class="mono">${esc(s.key)}</td>
+    <td style="min-width:240px">${esc(s.en)}<span class="t2">${esc(s.th)}</span></td>
+    <td><span class="bc">${esc(s.brand)}</span></td>
+    <td style="min-width:170px">${s.l2th?esc(s.l2th):'<span style="color:var(--warn)">ยังไม่ระบุ</span>'}<span class="t2">${esc(s.l3th||'')}</span></td>
+    <td style="min-width:140px">${esc(s.bmc)}<span class="t2">${esc(s.bms)}</span></td>
+    <td class="r num">${money(s.price)}</td>
+    <td>${s.status==='พร้อมขาย'?chip('ok','พร้อมขาย'):chip('warn','งดขาย')}</td></tr>`).join('')
+    :`<tr><td colspan="7" style="cursor:default">${emptyState('search','ไม่พบ SKU','ลองเปลี่ยนคำค้นหรือล้างตัวกรอง')}</td></tr>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>รหัส TKG</th><th>ชื่อเมนู</th><th>แบรนด์</th><th>หมวดกลาง</th><th>หมวดเมนูแบรนด์</th><th class="r">ราคา (บาท)</th><th>สถานะ</th></tr></thead><tbody>${body}</tbody></table></div>${pager(list.length,page,key)}`;
+}
+function skuList(){
+  const f=st.sku; const list=filterSkus(f);
+  const l2s=[...new Set(S.filter(s=>(!f.l1||(s.l1||'__none')===f.l1)).map(s=>s.l2th).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+  const active=[f.q,f.br,f.l1,f.l2,f.status,f.gap].some(Boolean);
+  const gapL={note:'มีหมายเหตุรอยืนยัน',price:'ไม่มีราคา',l1:'ไม่มีประเภท',pos:'ไม่มี POS SKU Code'};
+  return head('รายการ SKU','ค้นหาจากชื่อไทย/อังกฤษ รหัส TKG หรือรหัส POS คลิกแถวเพื่อดูรายละเอียดและการจับคู่ POS',
+    `<a class="btn" href="#sku-io">${ic('dl')}ส่งออก</a><a class="btn pri" href="#sku-approve">${ic('plus')}ขอเพิ่ม SKU</a>`,`<a href="#sku">SKU (Selling)</a> / รายการ SKU`)+
+  `<div class="pills" role="group" aria-label="เลือกแบรนด์">${[['','ทุกแบรนด์'],...BR.map(([c,n])=>[c,c+' · '+n])].map(([v,l])=>`<button class="pill${f.br===v?' on':''}" data-set="sku.br" data-v="${v}" aria-pressed="${f.br===v}">${esc(l)}<span class="c">${fmt(v?S.filter(s=>s.brand===v).length:S.length)}</span></button>`).join('')}</div>
+  <section class="card">
+    <div class="tools">
+      <label class="search">${ic('search')}<input id="sku-q" type="search" placeholder="ค้นหาชื่อเมนู รหัส TKG หรือรหัส POS" value="${esc(f.q)}" aria-label="ค้นหา SKU"></label>
+      <select class="sel" id="sku-l1" data-set="sku.l1" aria-label="ประเภท"><option value="">ทุกประเภท</option>${['อาหาร','เครื่องดื่ม','ของหวาน','อื่น ๆ','__none'].map(v=>`<option value="${v}"${f.l1===v?' selected':''}>${v==='__none'?'ยังไม่ระบุ':v}</option>`).join('')}</select>
+      <select class="sel" id="sku-l2" data-set="sku.l2" aria-label="หมวดกลาง"><option value="">ทุกหมวดกลาง</option>${l2s.map(v=>`<option${f.l2===v?' selected':''}>${esc(v)}</option>`).join('')}</select>
+      <select class="sel" id="sku-status" data-set="sku.status" aria-label="สถานะ"><option value="">ทุกสถานะ</option><option${f.status==='พร้อมขาย'?' selected':''}>พร้อมขาย</option><option value="งดขายชั่วคราว"${f.status==='งดขายชั่วคราว'?' selected':''}>งดขายชั่วคราว</option></select>
+      ${f.gap?`<button class="pill on" data-act="clear-gap">${esc(gapL[f.gap])} ${ic('x','width:14px;height:14px')}</button>`:''}
+      ${active?`<button class="lnk" data-act="reset-sku" style="margin-left:auto">ล้างตัวกรอง</button>`:''}
+    </div>
+    ${skuTable(list,f,'sku')}
+  </section>`;
+}
+function skuStores(){
+  const stores={};for(const s of S){const k=s.brand+'|'+s.store;(stores[k]=stores[k]||[]).push(s);}
+  return head('การเปิดขายรายสาขา','1 แถว = 1 รายการ POS × 1 ร้าน ตอนนี้ไฟล์มีแบรนด์ละ 1 สาขา เมื่อเพิ่มสาขาจะเห็นการเปิด–ปิดขายแยกรายร้านที่นี่','',`<a href="#sku">SKU (Selling)</a> / การเปิดขายรายสาขา`)+
+  `<div class="note info">${ic('info')}<span>ชื่อสาขาควรอ้างอิงจาก Company Core · สาขา ตอนนี้ใช้ชื่อตามที่ POS ส่งมา</span></div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>สาขา (ตาม POS)</th><th>แบรนด์</th><th class="r">รายการใน POS</th><th class="r">พร้อมขาย</th><th class="r">งดขาย</th><th class="r">ราคาเฉลี่ย</th><th>Snapshot</th></tr></thead><tbody>
+  ${Object.entries(stores).map(([k,a])=>{const [b,store]=k.split('|');const pr=a.filter(s=>s.price!=null);const avg=pr.reduce((x,s)=>x+s.price,0)/(pr.length||1);const p=a.filter(s=>s.status!=='พร้อมขาย').length;
+    return `<tr data-go="sku-list" data-f='{"br":"${b}"}'><td><b style="font-weight:600">${esc(store)}</b></td><td><span class="bc">${b}</span>${esc(BRN[b])}</td><td class="r num">${fmt(a.length)}</td><td class="r num">${fmt(a.length-p)}</td><td class="r num" style="${p?'color:var(--warn)':''}">${fmt(p)}</td><td class="r num">${money(Math.round(avg))}</td><td class="mono">${esc(a[0].date)}</td></tr>`;}).join('')}
+  </tbody></table></div></section>`;
+}
+function skuPos(){
+  const f=st.skuPos; const q=f.q.trim().toLowerCase();
+  const list=S.filter(s=>(!f.br||s.brand===f.br)&&(!q||s.key.toLowerCase().includes(q)||(s.posId||'').includes(q)||(s.posCode||'').toLowerCase().includes(q)||(s.label||'').toLowerCase().includes(q)));
+  const page=Math.min(f.page,Math.max(1,Math.ceil(list.length/PER)));f.page=page;
+  const withCode=S.filter(s=>s.posCode).length;
+  return head('รหัส POS','รหัส POS จับคู่กับรหัส TKG ของแต่ละ SKU ไม่ได้ใช้แทนรหัส TKG ถ้าเปลี่ยนระบบ POS รหัส TKG ยังคงเดิม','',`<a href="#sku">SKU (Selling)</a> / รหัส POS`)+
+  `<div class="metrics">${metric('จับคู่ POS แล้ว',fmt(S.filter(s=>s.posId).length),'มี POS Internal ID')}${metric('มี POS SKU Code',fmt(withCode),`อีก ${fmt(S.length-withCode)} รายการมีแค่ Internal ID`)}${metric('แหล่งข้อมูล',`<span style="font-size:20px">FoodStory</span>`,'manage.foodstory.co')}</div>
+  <div class="pills">${[['','ทุกแบรนด์'],...BR.map(([c,n])=>[c,c+' · '+n])].map(([v,l])=>`<button class="pill${f.br===v?' on':''}" data-set="skuPos.br" data-v="${v}">${esc(l)}</button>`).join('')}</div>
+  <section class="card"><div class="tools"><label class="search">${ic('search')}<input id="pos-q" type="search" placeholder="ค้นหารหัส TKG, POS ID หรือชื่อใน POS" value="${esc(f.q)}" aria-label="ค้นหารหัส POS"></label></div>
+  <div class="tbl-wrap"><table><thead><tr><th>รหัส TKG</th><th></th><th>POS Internal ID</th><th>POS SKU Code</th><th>ชื่อใน POS</th><th>กลุ่ม / หมวดใน POS</th><th>สาขา</th></tr></thead><tbody>
+  ${list.slice((page-1)*PER,page*PER).map(s=>`<tr data-sku="${esc(s.key)}"><td class="mono" style="color:var(--ink)">${esc(s.key)}</td><td style="color:var(--ink-4)">↔</td><td class="mono">${esc(s.posId)||'—'}</td><td class="mono">${esc(s.posCode)||'<span style="color:var(--ink-4)">—</span>'}</td><td style="min-width:200px">${esc(s.label)}</td><td style="min-width:140px">${esc(s.grp)}<span class="t2">${esc(s.cat)}</span></td><td style="white-space:nowrap">${esc(s.store)}</td></tr>`).join('')}
+  </tbody></table></div>${pager(list.length,page,'pos')}</section>`;
+}
+function skuCats(){
+  const by={};for(const s of S){if(s.l3)by[s.l2+'|'+s.l3]=(by[s.l2+'|'+s.l3]||0)+1; if(s.l2)by[s.l2]=(by[s.l2]||0)+1;}
+  let rows='',l1='',l2='';
+  for(const c of D.cats){
+    if(c[0]!==l1){l1=c[0];rows+=`<div class="tree-row l0"><span class="nm">${esc(c[2])} · ${esc(c[1])} <span class="cd">${esc(c[0])}</span></span><span class="num" style="text-align:right">${fmt(S.filter(s=>s.l1===c[2]).length)}</span><span></span></div>`;}
+    if(c[3]!==l2){l2=c[3];const n=by[c[4]]||0;rows+=`<button class="tree-row l1" data-go="sku-list" data-f='${jf({l2:c[5]})}'><span class="nm">${esc(c[5])} <span class="cd">${esc(c[3])}</span></span><span class="num" style="text-align:right">${fmt(n)}</span><span class="bar"><span style="width:${Math.min(100,Math.round(n/4))}%"></span></span></button>`;}
+    if(c[6]){const n=by[c[4]+'|'+c[7]]||0;rows+=`<button class="tree-row l2" data-go="sku-list" data-f='${jf({l2:c[5],q:''})}'><span class="nm">${esc(c[8])} <span class="cd">${esc(c[6])}</span></span><span class="num" style="text-align:right;${n?'':'color:var(--ink-4)'}">${fmt(n)}</span><span class="bar"><span style="width:${Math.min(100,Math.round(n/4))}%"></span></span></button>`;}
+  }
+  return head('หมวด SKU กลาง','หมวดกลางที่ใช้ร่วมทุกแบรนด์ (ประเภท · หมวด · หมวดย่อย) ใช้เทียบยอดขายข้ามแบรนด์','',`<a href="#sku">SKU (Selling)</a> / หมวด SKU กลาง`)+
+  `<section class="card"><div class="tree-row l0" style="color:var(--ink-3);font-size:12px;font-weight:500"><span>หมวด</span><span style="text-align:right">SKU</span><span></span></div>${rows}</section>`;
+}
+function skuBrandCats(){
+  const b=st.sku.bcBrand||'TK';
+  const cats=D.bmc.filter(r=>r[0]===b);
+  const cnt={};for(const s of S.filter(s=>s.brand===b)){const k=s.bmc+'|'+s.bms;cnt[k]=(cnt[k]||0)+1;cnt[s.bmc]=(cnt[s.bmc]||0)+1;}
+  return head('หมวดเมนูแบรนด์','หมวดตามเมนูของแต่ละร้าน ใช้แสดงหน้าร้านและใน POS แยกจากหมวดกลาง','',`<a href="#sku">SKU (Selling)</a> / หมวดเมนูแบรนด์`)+
+  `<div class="pills">${BR.map(([c,n])=>`<button class="pill${b===c?' on':''}" data-act="bcb" data-v="${c}">${c} · ${esc(n)}<span class="c">${D.bmc.filter(r=>r[0]===c).length}</span></button>`).join('')}</div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>ประเภท</th><th>หมวดเมนู</th><th>หมวดย่อย</th><th>Prefix</th><th class="r">SKU</th></tr></thead><tbody>
+  ${cats.map(r=>{const n=cnt[r[3]+'|'+r[5]]||cnt[r[2]+'|'+r[4]]||0;return `<tr data-go="sku-list" data-f='${jf({br:b,q:''})}'><td>${esc(r[1])}</td><td>${esc(r[3]||r[2])}</td><td>${esc(r[5]||r[4])}</td><td class="mono">${esc(r[6])||'—'}</td><td class="r num">${n?fmt(n):'<span style="color:var(--ink-4)">0</span>'}</td></tr>`}).join('')}
+  </tbody></table></div></section>`;
+}
+function skuGaps(){
+  const g=[
+    ['code','ยังไม่มีรหัสหมวดกลาง (SKU Category Code)',S.filter(s=>!s.code).length,'ต้องเลือก L3 หรือ L2 ให้แต่ละ SKU ก่อนใช้รายงานข้ามแบรนด์','sku-cats'],
+    ['note','มีหมายเหตุการจัดหมวดรอยืนยัน',S.filter(s=>s.note).length,'เช่น ยืนยันหมวดย่อย หรือ POS เดิมไม่ระบุกลุ่ม','note'],
+    ['pos','มีแค่ POS Internal ID ไม่มี POS SKU Code',S.filter(s=>!s.posCode).length,'ไม่ผิด แต่ควรตั้ง SKU Code ใน POS ให้ครบเพื่อจับคู่ได้แน่นอน','pos'],
+    ['price','ไม่มีราคาใน POS',S.filter(s=>s.price==null).length,'ราคา "กำหนดเอง" ไม่ใช่ 0','price'],
+    ['l1','ยังไม่ระบุประเภท (อาหาร / เครื่องดื่ม / ของหวาน)',S.filter(s=>!s.l1).length,'','l1']
+  ];
+  return head('ข้อมูลที่ต้องเติม','สิ่งที่ยังขาดก่อนล็อกข้อมูล SKU คลิกแต่ละข้อเพื่อดูรายการ','',`<a href="#sku">SKU (Selling)</a> / ข้อมูลที่ต้องเติม`)+
+  `<div class="note info">${ic('info')}<span>ข้อมูล SKU ยังไม่ final รายการนี้จะสั้นลงหลังปรับโครงสร้างฐานข้อมูล</span></div>
+  <section class="card">${g.map(([k,t,n,d,go])=>`<button class="brow" style="grid-template-columns:minmax(0,1fr) 72px 120px;padding:14px 20px" ${go==='sku-cats'?'data-go="sku-cats" data-f="{}"':`data-go="sku-list" data-f='{"gap":"${go}"}'`}><span><b style="font-weight:600">${esc(t)}</b>${d?`<span class="t2">${esc(d)}</span>`:''}</span><span class="n" style="${n?'color:var(--warn)':''}">${fmt(n)}</span><span class="bar w"><span style="width:${Math.max(n?2:0,Math.round(n/S.length*100))}%"></span></span></button>`).join('')}</section>`;
+}
+function skuPaused(){
+  const f={page:1};const list=S.filter(s=>s.status==='งดขายชั่วคราว');
+  return head('งดขายชั่วคราว','เมนูที่ยังอยู่ใน POS แต่ปิดขายอยู่ ณ วันที่ดึงข้อมูล','',`<a href="#sku">SKU (Selling)</a> / งดขายชั่วคราว`)+
+  `<div class="pills">${BR.map(([c,n])=>`<span class="tag" style="height:28px;padding:0 12px;font-size:13px"><b style="font-weight:600;margin-right:6px">${c}</b>${fmt(list.filter(s=>s.brand===c).length)}</span>`).join('')}</div>
+  <section class="card">${skuTable(list,f,'paused')}</section>`;
+}
+function skuDrawer(s){
+  const kv=(k,v)=>`<dt>${esc(k)}</dt><dd>${v||'<span style="color:var(--ink-4)">—</span>'}</dd>`;
+  return `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-t">
+    <div class="dr-h"><div style="min-width:0"><span class="mono">${esc(s.key)}</span><h2 id="dr-t">${esc(s.en)}</h2><div style="color:var(--ink-2);margin-top:2px">${esc(s.th)}</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="bc">${esc(s.brand)}</span>${s.status==='พร้อมขาย'?chip('ok','พร้อมขาย'):chip('warn','งดขายชั่วคราว')}</div></div><button class="ibtn" data-act="close" aria-label="ปิด">${ic('x')}</button></div>
+    <div class="dr-b">
+      <div class="dr-s"><h3>หมวดกลาง</h3><dl class="kv">${kv('ประเภท',esc(s.l1))}${kv('หมวด',s.l2?`${esc(s.l2th)} <span class="t2" style="display:inline">${esc(s.l2)}</span>`:'')}${kv('หมวดย่อย',s.l3?`${esc(s.l3th)} <span class="t2" style="display:inline">${esc(s.l3)}</span>`:'')}${kv('SKU Category Code',s.code?`<span class="mono">${esc(s.code)}</span>`:'<span style="color:var(--warn)">ยังไม่กำหนด</span>')}</dl></div>
+      <div class="dr-s"><h3>หมวดเมนูแบรนด์</h3><dl class="kv">${kv('หมวดเมนู',esc(s.bmc))}${kv('หมวดย่อย',esc(s.bms))}</dl></div>
+      <div class="dr-s"><h3>การจับคู่ POS · ${esc(s.store)}</h3><dl class="kv">${kv('POS Internal ID',`<span class="mono">${esc(s.posId)}</span>`)}${kv('POS SKU Code',s.posCode?`<span class="mono">${esc(s.posCode)}</span>`:'')}${kv('ชื่อใน POS',esc(s.label))}${kv('กลุ่ม / หมวด POS',esc([s.grp,s.cat].filter(Boolean).join(' / ')))}${kv('ราคา',s.price!=null?`<span class="num">${money(s.price)}</span> บาท`:'')}${kv('Snapshot',`<span class="mono">${esc(s.date)}</span>`)}</dl></div>
+      ${s.note?`<div class="dr-s" style="border:0"><h3>หมายเหตุการจัดหมวด</h3><div class="note" style="margin:0">${ic('warn')}<span>${esc(s.note)}</span></div></div>`:''}
+    </div>
+    <div class="dr-f"><a class="btn" href="#sku-log">${ic('clock')}ประวัติ</a><a class="btn pri" href="#sku-approve">ขอปรับ / เลิกขาย</a></div>
+  </aside>`;
+}
+
+/* ---------- placeholders ---------- */
+function placeholder(mod,title,icon,body,crumbRoot){
+  return head(title,'','',`<a href="#${crumbRoot}">${mod}</a> / ${title}`)+`<section class="card">${emptyState(icon,'ยังไม่เปิดใช้ในต้นแบบนี้',body)}</section>`;
+}
+const PH={
+  'mat-buy':['Materials','รายการซื้อ (ยี่ห้อ / แพ็ก)','cart','หน้านี้จะผูก Material 1 รายการกับยี่ห้อ ขนาดแพ็ก และผู้ขายหลายราย ไฟล์ปัจจุบันยังไม่มีคอลัมน์ยี่ห้อ / รุ่น / ขนาดที่กรอกไว้ จึงยังไม่มีข้อมูลให้แสดง','mat'],
+  'mat-approve':['Materials','คำขออนุมัติ','layers','คำขอเพิ่ม แก้ไข หรือเลิกใช้ Material จะเข้ามาที่นี่และส่งต่อผู้อนุมัติตามอำนาจอนุมัติใน Company Core','mat'],
+  'mat-io':['Materials','นำเข้า / ส่งออกข้อมูล','dl','นำเข้าไฟล์ Excel รอบใหม่ เทียบความต่างก่อนบันทึก และส่งออกเป็น Excel / CSV','mat'],
+  'mat-log':['Materials','ประวัติการเปลี่ยนแปลง','clock','ทุกการแก้ไขจะบันทึกว่าใครแก้ เมื่อไร และค่าก่อน–หลัง','mat'],
+  'mat-config':['Materials','ตั้งค่า','gear','สิทธิ์ผู้แก้ไข รูปแบบรหัส Material และการแจ้งเตือน','mat'],
+  'sku-approve':['SKU (Selling)','คำขอเพิ่ม / ปรับ / เลิกขาย','layers','คำขอเพิ่มเมนูใหม่ ปรับชื่อ / หมวด หรือเลิกขาย จะเข้ามาที่นี่ก่อนส่งไป POS','sku'],
+  'sku-io':['SKU (Selling)','นำเข้า / ส่งออกข้อมูล','dl','ดึงเมนูจาก POS รอบใหม่ เทียบกับทะเบียน และส่งออกเป็น Excel / CSV','sku'],
+  'sku-log':['SKU (Selling)','ประวัติการเปลี่ยนแปลง','clock','ทุกการแก้ไขจะบันทึกว่าใครแก้ เมื่อไร และค่าก่อน–หลัง','sku'],
+  'sku-config':['SKU (Selling)','ตั้งค่า','gear','สิทธิ์ผู้แก้ไข รูปแบบรหัส TKG และการเชื่อม POS','sku']
+};
+
+/* ---------- router ---------- */
+const MAT={mat:matOverview,'mat-list':matList,'mat-sm':matSM,'mat-brands':matBrands,'mat-cats':matCats,'mat-units':matUnits,'mat-review':matReview,'mat-ids':matIds};
+const SKU={sku:skuOverview,'sku-list':skuList,'sku-stores':skuStores,'sku-pos':skuPos,'sku-cats':skuCats,'sku-brandcats':skuBrandCats,'sku-gaps':skuGaps,'sku-paused':skuPaused};
+let drawer=null;
+function route(){return (location.hash||'').replace(/^#/,'')||'home';}
+function render(keepFocus){
+  const r=route(); const app=document.getElementById('app');
+  let html;
+  if(MAT[r]||(PH[r]&&r.startsWith('mat'))) html=topbar('Materials')+`<div class="shell">${sidebar(matNav(),r,'เมนู Materials')}<main>${MAT[r]?MAT[r]():placeholder(...PH[r])}</main></div>`;
+  else if(SKU[r]||(PH[r]&&r.startsWith('sku'))) html=topbar('SKU (Selling)')+`<div class="shell">${sidebar(skuNav(),r,'เมนู SKU')}<main>${SKU[r]?SKU[r]():placeholder(...PH[r])}</main></div>`;
+  else html=launcher();
+  if(drawer) html+=drawer.t==='m'?matDrawer(M.find(m=>m.legacy===drawer.k)):skuDrawer(S.find(s=>s.key===drawer.k));
+  const fid=keepFocus&&document.activeElement&&document.activeElement.id; const pos=fid&&document.activeElement.selectionStart;
+  app.innerHTML=html;
+  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}}
+}
+function setPath(path,v){const [a,b]=path.split('.');st[a][b]=v;if('page' in st[a]&&b!=='page')st[a].page=1;}
+function resetMat(){Object.assign(st.mat,{q:'',grp:'',p1:'',br:'',st:'',pork:false,bible:'',page:1,unit:''});}
+function resetSku(){Object.assign(st.sku,{q:'',br:'',l1:'',l2:'',status:'',page:1,gap:''});}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act],[data-go],[data-set],[data-page],[data-mat],[data-sku],a[href^="#"]');
+  if(!t)return;
+  if(t.dataset.page){const [k,p]=t.dataset.page.split(':');const n=+p;if(k==='mat')st.mat.page=n;else if(k==='sku'||k==='paused')st.sku.page=n;else if(k==='pos')st.skuPos.page=n;else if(k==='ids')st.idsPage=n;render();window.scrollTo(0,0);return;}
+  if(t.dataset.set && t.tagName==='BUTTON'){setPath(t.dataset.set,t.dataset.v);render();return;}
+  const a=t.dataset.act;
+  if(a){
+    if(a==='close'){drawer=null;render();return;}
+    if(a==='nav'){st.navOpen=!st.navOpen;const s=document.querySelector('.side');if(s)s.dataset.open=st.navOpen;return;}
+    if(a==='pork'){st.mat.pork=!st.mat.pork;st.mat.page=1;render();return;}
+    if(a==='clear-bible'){st.mat.bible='';render();return;}
+    if(a==='clear-unit'){st.mat.unit='';render();return;}
+    if(a==='clear-gap'){st.sku.gap='';render();return;}
+    if(a==='rtab'){st.matReview=t.dataset.v;render();return;}
+    if(a==='bcb'){st.sku.bcBrand=t.dataset.v;render();return;}
+    if(a==='reset-mat'){resetMat(); if(t.tagName!=='A'){render();return;}}
+    if(a==='mat-multi'){resetMat();st.mat.br='__multi';}
+    if(a==='mat-none'){resetMat();st.mat.br='__none';}
+    if(a==='reset-sku'){resetSku(); if(t.tagName!=='A'){render();return;}}
+    if(a==='sku-ready'){resetSku();st.sku.status='พร้อมขาย';}
+  }
+  if(t.dataset.go){e.preventDefault();const f=JSON.parse(t.dataset.f||'{}');
+    if(t.dataset.go==='mat-list'){resetMat();Object.assign(st.mat,f);} if(t.dataset.go==='sku-list'){resetSku();Object.assign(st.sku,f);}
+    drawer=null;st.navOpen=false; if(route()===t.dataset.go)render(); else location.hash=t.dataset.go; window.scrollTo(0,0); return;}
+  if(t.dataset.mat){drawer={t:'m',k:t.dataset.mat};render();return;}
+  if(t.dataset.sku){drawer={t:'s',k:t.dataset.sku};render();return;}
+  if(t.tagName==='A'){drawer=null;st.navOpen=false;}
+});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.set){setPath(t.dataset.set,t.value);if(t.dataset.set==='mat.grp')st.mat.p1='';if(t.dataset.set==='sku.l1')st.sku.l2='';render();}});
+let timer;document.addEventListener('input',e=>{const id=e.target.id;const map={'mat-q':'mat','sku-q':'sku','pos-q':'skuPos'};if(!map[id])return;clearTimeout(timer);timer=setTimeout(()=>{st[map[id]].q=e.target.value;st[map[id]].page=1;render(true);},180);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer){drawer=null;render();}});
+window.addEventListener('hashchange',()=>{drawer=null;render();window.scrollTo(0,0);});
+
+fetch('data.json').then(r=>{if(!r.ok)throw new Error(r.status);return r.json();}).then(d=>{
+  D=d;M=d.mats;MA=M.filter(isActive);S=d.skus;BIB=d.bible;render();
+}).catch(err=>{document.getElementById('app').innerHTML=`<div class="loading">โหลดข้อมูลไม่สำเร็จ (${esc(err.message)}) ลองรีเฟรชหน้านี้</div>`;});
+})();
+</script>

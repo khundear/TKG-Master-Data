@@ -1,0 +1,26 @@
+# Business data — stays local (D-005)
+Data/
+prototype/data.json
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Node / build (for the app later)
+node_modules/
+.next/
+.turbo/
+dist/
+coverage/
+*.log
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
