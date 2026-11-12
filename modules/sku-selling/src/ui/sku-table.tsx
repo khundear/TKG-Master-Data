@@ -39,7 +39,7 @@ export function SkuTable({
             </EmptyState>
           }
           columns={[
-            { key: 'key', header: _t('รหัส TKG'), className: 'mono', render: (s) => s.key },
+            { key: 'key', header: _t('รหัสอ้างอิงชั่วคราว'), className: 'mono', render: (s) => s.key },
             { key: 'name', header: _t('ชื่อเมนู'), style: { minWidth: 240 }, render: (s) => <SkuName sku={s} /> },
             { key: 'brand', header: _t('แบรนด์'), render: (s) => <span className="bc">{s.brand}</span> },
             {

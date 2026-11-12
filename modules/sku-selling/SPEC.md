@@ -23,7 +23,7 @@ Reference screens: `prototype/index.html` (`#sku…` routes). Business rules: `I
 
 ## List
 
-- Columns: รหัส TKG (Master Record Key) · ชื่อเมนู (EN, TH under it) · แบรนด์ · หมวดกลาง · หมวดเมนูแบรนด์ · ราคา · สถานะ.
-- Filters: brand pills with counts, search (names, TKG key, POS ID, POS code), type (L1), central category (L2), status, gap filters from ข้อมูลที่ต้องเติม.
+- Columns: รหัสอ้างอิงชั่วคราว (Master Record Key; not the TKG code) · ชื่อเมนู (EN, TH under it) · แบรนด์ · หมวดกลาง · หมวดเมนูแบรนด์ · ราคา · สถานะ.
+- Filters: brand pills with counts, search (names, reference key, POS ID, POS code), type (L1), central category (L2), status, gap filters from ข้อมูลที่ต้องเติม.
 - Row opens a detail drawer: central categories + SKU Category Code, brand menu category, POS mapping (store, POS internal ID, POS SKU code, POS name, group, price, snapshot date), mapping note.
-- POS codes are shown as mappings (↔) to the TKG key, never as the item's ID.
+- POS codes are shown as mappings (↔) to the temporary reference key (Master Record Key), never as the item's ID.
