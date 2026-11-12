@@ -1,0 +1,8 @@
+/* Brand pills rendered as links (filters live in the URL); @tkg/ui only styles them as buttons. */
+a.pill{text-decoration:none}
+/* SKU (Selling) module additions. Shell styles come from @tkg/ui; this only covers prototype inline styles. */
+.brow.gap-row{grid-template-columns:minmax(0,1fr) 72px 120px;padding:14px 20px}
+@media (max-width:860px){
+  .brow.gap-row{grid-template-columns:minmax(0,1fr) 56px}
+  .brow.gap-row .bar{display:none}
+}
