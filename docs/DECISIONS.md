@@ -22,4 +22,3 @@
 - Revisions, change requests and approvals (D-007): needed before anything can become `approved`.
 - Owners and approvers per data type.
 - SKU cleansing and restructure — waits for the user.
-- GitHub remote for this repo (owner and name).

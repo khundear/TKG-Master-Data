@@ -14,6 +14,7 @@ conventions of ICW OS but does not depend on, or touch, any ICW product reposito
 
 ```
 README.md                 this file
+docs/HANDOVER.md          state of the project and how to pick it up on a new account or machine
 CLAUDE.md                 rules for every Claude Code session working here (read first)
 IMPLEMENTATION-CONTEXT.md full business context and data rules (Thai)
 docs/DECISIONS.md         decision log (D-001 …)
