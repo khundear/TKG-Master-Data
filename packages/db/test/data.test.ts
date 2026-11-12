@@ -70,11 +70,16 @@ describe('materials', () => {
     expect(await db.material.count({ where: { secondaryCategory: 'PORK', categoryId: { not: null } } })).toBe(27);
   });
 
-  it('pork is a filter that matches the prototype rule', async () => {
-    const all = await db.material.findMany({ select: { name: true, secondaryCategory: true } });
-    const expected = all.filter((m) => m.secondaryCategory === 'PORK' || /หมู|เบคอน|แฮม|bacon|pork/i.test(m.name)).length;
-    expect(expected).toBeGreaterThan(27);
-    expect(await db.material.count({ where: filters.porkMaterials })).toBe(expected);
+  it('pork filter: category PORK or a pork word in a food item name, never spare parts', async () => {
+    const all = await db.material.findMany({ select: { code: true, name: true, group: true, secondaryCategory: true } });
+    const expected = all.filter(
+      (m) => m.secondaryCategory === 'PORK' || (m.group !== 'SP' && /หมู|เบคอน|แฮม|bacon|pork/i.test(m.name)),
+    );
+    expect(expected.length).toBeGreaterThan(27);
+    const pork = await db.material.findMany({ where: filters.porkMaterials, select: { code: true } });
+    expect(pork.map((m) => m.code).sort()).toEqual(expected.map((m) => m.code).sort());
+    expect(pork.some((m) => m.code === 'CS_OTHERS_0014')).toBe(false); // slicer spring
+    expect(pork.some((m) => m.code === 'FG_MEAT_0016')).toBe(true); // เบคอน
   });
 });
 

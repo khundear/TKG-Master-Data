@@ -6,13 +6,19 @@ import { MATERIAL_MAPPING_STATUS } from './reference';
 export const activeMaterials: Prisma.MaterialWhereInput = { isCancelled: false };
 
 /**
- * มีหมู — materials that contain pork. Same rule as the prototype: secondary category PORK, or a pork word in the
- * name. It is a filter on Materials, never its own menu, and it is a proposal for review, not a certified list.
+ * มีหมู — materials that contain pork: secondary category PORK, or a pork word in the name of a food item (RM / SM).
+ * Spare parts and supplies (group SP) are left out, so e.g. a pork-slicer spring is not "pork" (QA finding 3).
+ * It is a filter on Materials, never its own menu, and it is a proposal for review, not a certified list.
  */
 export const porkMaterials: Prisma.MaterialWhereInput = {
   OR: [
     { secondaryCategory: 'PORK' },
-    ...['หมู', 'เบคอน', 'แฮม', 'bacon', 'pork'].map((w) => ({ name: { contains: w, mode: 'insensitive' as const } })),
+    {
+      AND: [
+        { OR: [{ group: null }, { group: { not: 'SP' } }] },
+        { OR: ['หมู', 'เบคอน', 'แฮม', 'bacon', 'pork'].map((w) => ({ name: { contains: w, mode: 'insensitive' as const } })) },
+      ],
+    },
   ],
 };
 

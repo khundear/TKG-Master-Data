@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import '@tkg/ui/styles.css';
 import '../lib/i18n';
+import { requestLocale } from '../lib/locale.server';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await requestLocale();
   return (
-    <html lang="th">
+    <html lang={locale}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
@@ -22,7 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
   );

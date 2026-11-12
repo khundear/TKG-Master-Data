@@ -29,7 +29,7 @@ describe('material list filters', () => {
     expect(await total({ grp: 'RM', p1: 'PROTEIN' })).toBe(228);
     expect(await total({ st: 'ต้องตัดสินใจ' })).toBe(67);
     expect(await total({ st: 'ยกเลิก' })).toBe(2);
-    expect(await total({ pork: true })).toBe(42);
+    expect(await total({ pork: true })).toBe(41); // spare parts left out (QA finding 3)
     expect(await total({ bible: 'RM_PROTN' })).toBe(223);
     expect(await total({ unit: 'none' })).toBe(941);
     expect(await total({ unit: 'EA' })).toBe(107);

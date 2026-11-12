@@ -16,6 +16,11 @@ export type Vars = Record<string, string | number>;
 
 const catalogs: Record<Locale, Catalog> = { th: {}, en: { ...(core as Catalog) } };
 let current: Locale = 'th';
+let resolver: (() => Locale | undefined) | null = null;
+
+/** Cookie that holds the user's TH/EN choice. */
+export const LOCALE_COOKIE = 'tkg-locale';
+export const toLocale = (v: unknown): Locale => (v === 'en' ? 'en' : 'th');
 
 /** Add English (or another locale's) strings. Entries already present win, so a module cannot overwrite core. */
 export function registerCatalog(entries: Catalog, locale: Locale = 'en'): void {
@@ -25,8 +30,15 @@ export function registerCatalog(entries: Catalog, locale: Locale = 'en'): void {
 export function setLocale(locale: Locale): void {
   current = locale;
 }
+/**
+ * Per-request locale on the server: the app registers a function that reads the request's cookie, so concurrent
+ * requests in different languages don't share the global. Returns undefined outside a request; then `current` is used.
+ */
+export function setLocaleResolver(fn: (() => Locale | undefined) | null): void {
+  resolver = fn;
+}
 export function getLocale(): Locale {
-  return current;
+  return resolver?.() ?? current;
 }
 
 function fill(text: string, vars?: Vars): string {
@@ -47,7 +59,7 @@ export function translate(locale: Locale, key: string, vars?: Vars): string {
 
 /** Translate into the current locale. The global is `_t`, never `t`. */
 export function _t(key: string, vars?: Vars): string {
-  return translate(current, key, vars);
+  return translate(getLocale(), key, vars);
 }
 
 /** Thai keys with no English, for the i18n check. */
