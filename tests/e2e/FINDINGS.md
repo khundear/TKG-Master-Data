@@ -5,7 +5,8 @@ Postgres.app `tkg_master_data`, dev server `pnpm dev` on port 3000, built-in bro
 
 **Verdict: no blocking problems.** Every page loads, every number matches the prototype and the sheets, the data rules
 hold in the database and on screen, phone width has no sideways scrolling, and there are no console or server errors.
-Three medium findings and a handful of small ones are below.
+Three medium findings and a handful of small ones are below. Findings 1–3 now have fixes on their own branches;
+they are not merged into `main` yet and QA has not re-tested them.
 
 Severity: **High** = wrong data or broken page · **Medium** = breaks a house rule or misleads a reader · **Low** = polish.
 "Owner" is the session that should fix it. Shared shell / `packages/ui` / `apps/web` scaffold / `packages/db` belong to the
@@ -15,9 +16,9 @@ Data-DB session (`docs/AGENTS.md`).
 
 | # | Sev | Route | What is wrong | Expected | Actual | Owner |
 |---|---|---|---|---|---|---|
-| 1 | Medium | every page | There is no way to switch the app to English. `setLocale()` is never called, the top bar has no TH/EN switch, `<html lang="th">` is fixed. | A TH/EN switch (ICW convention), so the English catalogs are used and can be checked. | English catalogs exist and `pnpm check:i18n` passes, but no user can ever see English, and English mode cannot be tested. | UI (Data-DB) |
-| 2 | Medium | `/sku/list`, `/sku/pos`, `/sku/paused`, SKU drawer | The column called **รหัส TKG** shows the Master Record Key, which is the brand plus the POS Internal ID for all 2,418 SKUs (e.g. `NT:47229499`). On `/sku/pos` it reads `NT:47229499 ↔ 47229499`, so the "TKG code" is really the POS number. Same as the prototype. | Rule: POS codes are mappings and never replace the TKG ID. Until TKG codes are allocated, the column should say what it is (e.g. "Master Record Key") so nobody hands it to POS or BOM as the permanent code. | The drawer correctly says "รหัส TKG ถาวร · ยังไม่ออกรหัส", but list headers, search hint and POS page call the POS-based key "รหัส TKG". | SKU (label); TKG code format is a user decision |
-| 3 | Medium | `/materials/list?pork=1` | The **มีหมู** filter matches words in the name, so it lists non-food items: `CS_OTHERS_0014` สปริง เครื่องสไลด์หมู 14 นิ้ว (a slicer spring), and `RM_OTHERS_0007` ผงปรุงรสหมู (seasoning). 42 results = 27 in sub-category PORK + 15 by name. | Pork filter shows pork materials only (IMPLEMENTATION-CONTEXT §3: name grouping is not certified). At least exclude group SP, or label the result "ข้อเสนอ · รอตรวจ". | A machine spare part shows up as pork. | Data-DB (`porkMaterials` in `packages/db/src/filters.ts`) |
+| 1 | Medium · **fixed on branch `claude/data-db-qa-fixes`** | every page | There is no way to switch the app to English. `setLocale()` is never called, the top bar has no TH/EN switch, `<html lang="th">` is fixed. | A TH/EN switch (ICW convention), so the English catalogs are used and can be checked. | English catalogs exist and `pnpm check:i18n` passes, but no user can ever see English, and English mode cannot be tested. | UI (Data-DB) |
+| 2 | Medium · **fixed on branch `claude/sku-label-master-key`** (renamed to "รหัสอ้างอิงชั่วคราว") | `/sku/list`, `/sku/pos`, `/sku/paused`, SKU drawer | The column called **รหัส TKG** shows the Master Record Key, which is the brand plus the POS Internal ID for all 2,418 SKUs (e.g. `NT:47229499`). On `/sku/pos` it reads `NT:47229499 ↔ 47229499`, so the "TKG code" is really the POS number. Same as the prototype. | Rule: POS codes are mappings and never replace the TKG ID. Until TKG codes are allocated, the column should say what it is (e.g. "Master Record Key") so nobody hands it to POS or BOM as the permanent code. | The drawer correctly says "รหัส TKG ถาวร · ยังไม่ออกรหัส", but list headers, search hint and POS page call the POS-based key "รหัส TKG". | SKU (label); TKG code format is a user decision |
+| 3 | Medium · **fixed on branch `claude/data-db-qa-fixes`** (group SP left out: 41, not 42) | `/materials/list?pork=1` | The **มีหมู** filter matches words in the name, so it lists non-food items: `CS_OTHERS_0014` สปริง เครื่องสไลด์หมู 14 นิ้ว (a slicer spring), and `RM_OTHERS_0007` ผงปรุงรสหมู (seasoning). 42 results = 27 in sub-category PORK + 15 by name. | Pork filter shows pork materials only (IMPLEMENTATION-CONTEXT §3: name grouping is not certified). At least exclude group SP, or label the result "ข้อเสนอ · รอตรวจ". | A machine spare part shows up as pork. | Data-DB (`porkMaterials` in `packages/db/src/filters.ts`) |
 | 4 | Low | `/sku/approve`, `/sku/io`, `/sku/log`, `/sku/config` | Placeholder text says "ยังไม่เปิดใช้**ในต้นแบบนี้**" ("…in this prototype"). | The app is not the prototype. Materials already says "ยังไม่เปิดใช้ · อยู่ในระยะถัดไป"; use the same. | Two different wordings for the same state, one of them wrong. | SKU |
 | 5 | Low | all `/sku` pages at 375 px | Top bar cuts the module name to "SKU (S…". | Full name, or a short form that fits. | Truncated. | UI (Data-DB) |
 | 6 | Low | `/materials/list`, `/sku/list`, `/sku/paused`, `/materials/sm` | Opening a row's drawer does not change the URL. | A record can be linked, shared, reopened with Back. | Drawer cannot be opened from a link (also noted in the morning status). | Materials + SKU (or a shared `?id=` pattern in UI) |
@@ -98,5 +99,5 @@ NT 6 · OK 35). All match `IMPLEMENTATION-CONTEXT.md` and the prototype.
 node --test tests/e2e/smoke.test.mjs
 ```
 
-It checks every route returns 200, the draft badge, no "approved" wording, the key counts, legacy-ID search, POS mapping
-wording, and that bad URL values don't break pages. 6 tests, all pass on 93b56c3.
+It expects the pork count of 41, so it passes only once `claude/data-db-qa-fixes` is merged. It checks every route returns 200, the draft badge, no "approved" wording, the key counts, legacy-ID search, POS mapping
+wording, and that bad URL values don't break pages. 6 tests, all passed on 93b56c3 with the old pork count (42).

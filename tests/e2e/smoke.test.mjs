@@ -71,7 +71,8 @@ test('materials: counts, legacy IDs, "not specified" wording, pork is a filter n
   assert.ok(legacySearch.text.includes('เดิม BV_SODA_0001'), 'legacy ID shown under the current one');
 
   const pork = await page('/materials/list?pork=1');
-  assert.ok(pork.text.includes('จาก 42 รายการ'), 'pork filter count');
+  // 41 once claude/data-db-qa-fixes is merged (supplies, group SP, no longer match; was 42).
+  assert.ok(pork.text.includes('จาก 41 รายการ'), 'pork filter count');
 
   // Pork is never its own menu item
   const nav = overview.html.match(/<nav[\s\S]*?<\/nav>/)?.[0] ?? overview.html;
