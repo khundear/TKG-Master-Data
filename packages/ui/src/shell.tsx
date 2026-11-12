@@ -1,7 +1,7 @@
 'use client';
 // App shell: 64px top bar, 256px left menu, content on #F9F9F9 (ICW OS; Company Core is the reference).
 import { useEffect, useState, type ReactNode } from 'react';
-import { _t } from '@tkg/i18n';
+import { LOCALE_COOKIE, _t, getLocale } from '@tkg/i18n';
 import { UiLink, useUi } from './context';
 import { Icon, type IconName } from './icon';
 import { cx, fmt } from './format';
@@ -42,6 +42,7 @@ export function TopBar({ moduleName, user, logoSrc = '/tkg-logo.png', homeHref =
         </UiLink>
       </div>
       <div className="tr">
+        <LanguageSwitch />
         <button className="ibtn" aria-label={_t('การแจ้งเตือน')}>
           <Icon name="bell" />
         </button>
@@ -59,6 +60,26 @@ export function TopBar({ moduleName, user, logoSrc = '/tkg-logo.png', homeHref =
         ) : null}
       </div>
     </header>
+  );
+}
+
+/** TH / EN switch (ICW convention). Saves the choice in a cookie and reloads, so server pages render in it too. */
+export function LanguageSwitch() {
+  const locale = getLocale();
+  const pick = (next: 'th' | 'en') => {
+    if (next === locale) return;
+    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
+    window.location.reload();
+  };
+  return (
+    <div className="lang" role="group" aria-label={_t('ภาษา')}>
+      <button type="button" className={cx(locale === 'th' && 'on')} aria-pressed={locale === 'th'} onClick={() => pick('th')}>
+        TH
+      </button>
+      <button type="button" className={cx(locale === 'en' && 'on')} aria-pressed={locale === 'en'} onClick={() => pick('en')}>
+        EN
+      </button>
+    </div>
   );
 }
 

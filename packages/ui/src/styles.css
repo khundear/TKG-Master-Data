@@ -36,6 +36,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .tr{display:flex;align-items:center;gap:6px}
 .ibtn{width:40px;height:40px;border:none;background:transparent;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-5);cursor:pointer;text-decoration:none}
 .ibtn:hover{background:var(--hover);color:var(--ink-5)}
+.lang{display:inline-flex;border:1px solid var(--line, #E5E7EB);border-radius:8px;overflow:hidden;margin-right:4px}
+.lang button{height:30px;min-width:36px;padding:0 8px;border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--ink-5);cursor:pointer}
+.lang button.on{background:#0A66D6;color:#fff}
+.lang button:focus-visible{outline:2px solid #0A66D6;outline-offset:-2px}
 .me{display:flex;align-items:center;gap:10px;padding:4px 8px;border-radius:8px}
 .av{width:36px;height:36px;border-radius:9999px;background:#F7F7F7;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ink-5);flex:none}
 .me-t{display:flex;flex-direction:column;line-height:1.3}
