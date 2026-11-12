@@ -75,7 +75,7 @@ export function SkuFilterBar({ f, l1Options, l2Options }: { f: SkuListFilters; l
     <Toolbar>
       <SearchBox
         label={_t('ค้นหา SKU')}
-        placeholder={_t('ค้นหาชื่อเมนู รหัส TKG หรือรหัส POS')}
+        placeholder={_t('ค้นหาชื่อเมนู รหัสอ้างอิง หรือรหัส POS')}
         value={search.q}
         onChange={search.onChange}
       />

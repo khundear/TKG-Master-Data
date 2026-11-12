@@ -1,5 +1,5 @@
 'use client';
-// รหัส POS (prototype skuPos()): one row per POS mapping. Each POS code points (↔) at the TKG key; it is not the ID.
+// รหัส POS (prototype skuPos()): one row per POS mapping. Each POS code points (↔) at the temporary reference key (Master Record Key); it is not the ID.
 import { useCallback, useState } from 'react';
 import { _t } from '@tkg/i18n';
 import { DataTable, EmptyState, FilterPills, Pager, SearchBox, Toolbar } from '@tkg/ui';
@@ -42,7 +42,7 @@ export function PosView({
         <Toolbar>
           <SearchBox
             label={_t('ค้นหารหัส POS')}
-            placeholder={_t('ค้นหารหัส TKG, POS ID หรือชื่อใน POS')}
+            placeholder={_t('ค้นหารหัสอ้างอิง, POS ID หรือชื่อใน POS')}
             value={search.q}
             onChange={search.onChange}
           />
@@ -58,7 +58,7 @@ export function PosView({
               </EmptyState>
             }
             columns={[
-              { key: 'key', header: _t('รหัส TKG'), className: 'mono', style: { color: 'var(--ink)' }, render: (r) => r.key },
+              { key: 'key', header: _t('รหัสอ้างอิงชั่วคราว'), className: 'mono', style: { color: 'var(--ink)' }, render: (r) => r.key },
               {
                 key: 'map',
                 header: <span className="sr-only">{_t('จับคู่กับ')}</span>,

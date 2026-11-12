@@ -19,7 +19,7 @@ export async function SkuListPage({ searchParams }: { searchParams: SearchParams
     <>
       <PageHeader
         title={_t('รายการ SKU')}
-        description={_t('ค้นหาจากชื่อไทย/อังกฤษ รหัส TKG หรือรหัส POS คลิกแถวเพื่อดูรายละเอียดและการจับคู่ POS')}
+        description={_t('ค้นหาจากชื่อไทย/อังกฤษ รหัสอ้างอิง หรือรหัส POS คลิกแถวเพื่อดูรายละเอียดและการจับคู่ POS')}
         crumbs={crumbs(_t('รายการ SKU'))}
         actions={
           <>
@@ -79,7 +79,7 @@ export async function SkuPosPage({ searchParams }: { searchParams: SearchParams 
     <>
       <PageHeader
         title={_t('รหัส POS')}
-        description={_t('รหัส POS จับคู่กับรหัส TKG ของแต่ละ SKU ไม่ได้ใช้แทนรหัส TKG ถ้าเปลี่ยนระบบ POS รหัส TKG ยังคงเดิม')}
+        description={_t('รหัส POS เป็นการจับคู่กับ SKU ไม่ได้ใช้แทนรหัส TKG ตอนนี้ยังไม่ออกรหัส TKG จึงแสดงรหัสอ้างอิงชั่วคราว (แบรนด์ + POS ID) ไปก่อน ห้ามใช้เป็นรหัส TKG')}
         crumbs={crumbs(_t('รหัส POS'))}
       />
       <Metrics>

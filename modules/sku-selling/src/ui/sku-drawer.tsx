@@ -52,7 +52,7 @@ export function SkuDrawer({ sku, onClose }: { sku: SkuRow | null; onClose: () =>
           <DrawerSection title={_t('รหัส')}>
             <KeyValues
               items={[
-                [_t('Master Record Key'), mono(sku.key)],
+                [_t('รหัสอ้างอิงชั่วคราว (Master Record Key)'), mono(sku.key)],
                 [_t('รหัส TKG ถาวร'), sku.tkgCode ? mono(sku.tkgCode) : <Warn key="t">{_t('ยังไม่ออกรหัส')}</Warn>],
               ]}
             />
